@@ -1,0 +1,12 @@
+{
+  "name": "javasync",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "blake2": "^4.1.1",
+    "blessed": "^0.1.81",
+    "bunyan": "^1.8.15",
+    "ws": "^8.11.0"
+  }
+}
