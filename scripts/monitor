@@ -1,0 +1,333 @@
+#!/usr/bin/env node
+
+const bunyan = require('bunyan')
+const log = bunyan.createLogger({
+  name: 'myapp',
+  streams: [
+    {
+      level: 'info',
+      path: 'output.log'
+    }
+  ]
+})
+
+const JAMBHALA_ADDRESSES = "/home/cardano/intro/jambhala/cardano-cli-guru/assets/addr"
+var fs = require('fs');
+var path = require('path');
+
+const jambhalaAddresses = {}
+const files = fs.readdirSync(JAMBHALA_ADDRESSES)
+files.forEach((file, index) => {
+  const name = path.basename(file, '.addr')
+  const addressFile = path.join(JAMBHALA_ADDRESSES, file)
+  const addr = fs.readFileSync(addressFile)
+  jambhalaAddresses[addr] = name
+})
+
+const jambhalaTransactions = {}
+
+const blessed = require('blessed')
+const screen = blessed.screen({
+  smartCSR: true
+})
+
+const box = blessed.box({
+  top: 'center',
+  left: 'center',
+  width: '100%',
+  height: '100%',
+  content: '  Blockchain Status',
+  tags: true,
+  border: {
+    type: 'line'
+  },
+  style: {
+    fg: 'white',
+    bg: 'gray'
+  }
+})
+const blockHeight = blessed.text({
+  top: 2,
+  left: 1,
+  width: 23,
+  height: 1,
+  tags: true,
+  content: " Block height:",
+  style: {
+    bg: 'gray'
+  }
+})
+const blockHash = blessed.text({
+  top: 3,
+  left: 1,
+  width: 73,
+  height: 1,
+  content: " Hash:",
+  style: {
+    bg: 'gray'
+  }
+})
+const latestTransaction = blessed.text({
+  top: 5,
+  left: 1,
+  width: '100%-4',
+  height: 1,
+  tags: true,
+  content: " Latest Tx:"
+})
+latestUtxoList = blessed.text({
+  top: 7,
+  left: 10,
+  width: '90%',
+  height: 0,
+  tags: true,
+  style: {
+    bg: 'gray'
+  }
+})
+const mempoolTransactions = blessed.text({
+  top: 8,
+  left: 1,
+  width: '100%-4',
+  height: 1,
+  content: " Mempool:"
+})
+const mempoolTxList = blessed.text({
+  top: 10,
+  left: 10,
+  width: '90%',
+  height: 0,
+  tags: true,
+  style: {
+    bg: 'gray'
+  }
+})
+box.append(blockHeight)
+box.append(blockHash)
+box.append(latestTransaction)
+box.append(latestUtxoList)
+box.append(mempoolTransactions)
+box.append(mempoolTxList)
+
+screen.append(box)
+box.focus()
+
+screen.key(['q', 'C-c'], (ch, key) => {
+  return process.exit()
+})
+
+screen.render()
+
+const WebSocket = require('ws');
+const client = new WebSocket("ws://localhost:1337");
+
+let id = 1
+
+const colorTx = str => {
+  return "{yellow-fg}" + str + "{/}"
+}
+
+const colorUtxo = str => {
+  return "{red-fg}" + str + "{/}"
+}
+
+const colorAddr = str => {
+  return "{blue-fg}" + str + "{/}"
+}
+
+const colorValue = str => {
+  return "{green-fg}" + str + "{/}"
+}
+
+const formatTx = tx => {
+  let str = ""
+  let height = 0
+  // Lines with both an input and output
+  for (var i = 0; i < tx.inputs.length; i++) {
+    const input = tx.inputs[i]
+    const key = input.transaction.id + "#" + input.index
+    if (jambhalaTransactions[key] !== undefined) {
+      const [n, v] = jambhalaTransactions[key]
+      const lStr = "#" + input.index + ": " + n
+      const vStr = "  ₳ " + v
+      str += lStr + " ".repeat(64 - lStr.length - vStr.length) + colorValue(vStr)
+    } else {
+      str += "unindexed utxo (genesis?)" + " ".repeat(39)
+    }
+    if (tx.outputs[i] !== undefined) {
+      const output = tx.outputs[i]
+      let line = "#" + i + ": "
+      if (jambhalaAddresses[output.address] !== undefined) {
+        line += jambhalaAddresses[output.address]
+      }
+      const value = output.value.ada.lovelace / 1000000.0
+      const vStr = "₳ " + value.toFixed(6)
+      str += " ".repeat(70 - key.length) + " -->    " + line
+      str += " ".repeat(output.address.length - line.length - vStr.length)
+      str += colorValue(vStr)
+    }
+    str += "\n"
+    height += 1
+    str += colorUtxo(input.transaction.id) + " ".repeat(78 - key.length)
+    if (tx.outputs[i] !== undefined) {
+      const output = tx.outputs[i]
+      str += colorAddr(output.address)
+    }
+    str += "\n\n"
+    height += 2
+  }
+  // Lines with just an output
+  for (var i = tx.inputs.length; i < tx.outputs.length; i++) {
+    const output = tx.outputs[i]
+    let line = "#" + i + ": "
+    if (jambhalaAddresses[output.address] !== undefined) {
+      line += jambhalaAddresses[output.address]
+    }
+    const value = output.value.ada.lovelace / 1000000.0
+    const vStr = "₳ " + value.toFixed(6)
+    str += " ".repeat(76) + line + " ".repeat(output.address.length - line.length - vStr.length)
+    str += colorValue(vStr) + "\n"
+    str += " ".repeat(76) + colorAddr(output.address) + "\n"
+    height += 2
+  }
+  return [str, height]
+}
+
+const handlers = {
+  findIntersection: msg => {
+    const thisId = id++
+    client.send(JSON.stringify({
+      jsonrpc: "2.0",
+      method: "nextBlock",
+      id: thisId
+    }))
+  },
+  nextBlock: msg => {
+    const thisId = id++
+    if (msg.result.block !== undefined) {
+      blockHeight.content = " Block height: " + msg.result.block.height
+      blockHash.content = " Hash: " + msg.result.block.id
+      msg.result.block.transactions.forEach(tx => {
+        tx.outputs.forEach((output, index) => {
+          const value = output.value.ada.lovelace / 1000000.0
+          if (jambhalaAddresses[output.address] !== undefined) {
+            jambhalaTransactions[tx.id + "#" + index] = [jambhalaAddresses[output.address], value]
+          }
+        })
+      })
+      if (msg.result.block.transactions.length > 0) {
+        // Last tx
+        const lastTx = msg.result.block.transactions[msg.result.block.transactions.length - 1]
+        const fee = lastTx.fee.lovelace / 1000000.0
+        latestTransaction.content = " Latest Tx: " + colorTx(lastTx.id) + "  Fee: ₳ " + fee.toFixed(6)
+
+        const [text, height] = formatTx(lastTx)
+        latestUtxoList.content = text
+        latestUtxoList.height = height
+
+        mempoolTransactions.top = 8 + height
+        mempoolTxList.top = 10 + height
+      }
+      screen.render()
+    }
+    client.send(JSON.stringify({
+      jsonrpc: "2.0",
+      method: "nextBlock",
+      id: thisId
+    }))
+  },
+  acquireMempool: msg => {
+    const thisId = id++
+    client.send(JSON.stringify({
+      jsonrpc: "2.0",
+      method: "nextTransaction",
+      params: {
+        fields: "all"
+      },
+      id: thisId
+    }))
+    mempoolTxList.newContent = ""
+    mempoolTxList.newHeight = 0
+    screen.render()
+  },
+  releaseMempool: msg => {
+    const thisId = id++
+    if (mempoolTxList.content !== mempoolTxList.newContent) {
+      mempoolTxList.content = mempoolTxList.newContent
+      mempoolTxList.height = mempoolTxList.newHeight
+      screen.render()
+    }
+    setTimeout(() => {
+      client.send(JSON.stringify({
+        jsonrpc: "2.0",
+        method: "acquireMempool",
+        id: 0
+      }))
+    }, 1000)
+  },
+  nextTransaction: msg => {
+    const thisId = id++
+    if (msg.result.transaction === null) {
+      client.send(JSON.stringify({
+        jsonrpc: "2.0",
+        method: "releaseMempool",
+        id: 0
+      }))
+    } else {
+      const tx = msg.result.transaction
+      let str = ""
+      let h = 0
+      for (var i = 0; i < tx.inputs.length; i++) {
+        str += "    " + colorUtxo(tx.inputs[i].transaction.id + "#" + tx.inputs[i].index)
+        if (i === 0) str += "   -->   "
+        else str += "         "
+        if (i < tx.outputs.length) {
+          const value = tx.outputs[i].value.ada.lovelace / 1000000.0
+          const vStr = "₳ " + value.toFixed(6)
+          str += colorAddr(tx.outputs[i].address) + "  " + colorValue(vStr)
+        }
+        str += "\n"
+        h++
+      }
+      for (var i = tx.inputs.length; i < tx.outputs.length; i++) {
+        const value = tx.outputs[i].value.ada.lovelace / 1000000.0
+        const vStr = "₳ " + value.toFixed(6)
+        str += " ".repeat(79) + colorAddr(tx.outputs[i].address) + "  " + colorValue(vStr) + "\n"
+        h++
+      }
+      mempoolTxList.newContent += "Tx: " + colorTx(tx.id) + "\n" + str + "\n"
+      mempoolTxList.newHeight += h + 2
+      client.send(JSON.stringify({
+        jsonrpc: "2.0",
+        method: "nextTransaction",
+        params: {
+          fields: "all"
+        },
+        id: thisId
+      }))
+    }
+  }
+}
+
+client.once('open', () => {
+  client.send(JSON.stringify({
+    jsonrpc: "2.0",
+    method: "findIntersection",
+    params: {
+      points: ["origin"]
+    },
+    id: 0
+  }))
+  client.send(JSON.stringify({
+    jsonrpc: "2.0",
+    method: "acquireMempool",
+    id: 0
+  }))
+})
+
+client.on('message', function (msg) {
+  const response = JSON.parse(msg)
+  if (handlers[response.method] !== undefined) {
+    handlers[response.method](response)
+  }
+})
