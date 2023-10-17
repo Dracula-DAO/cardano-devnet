@@ -234,11 +234,11 @@ class DevnetIndexer {
     }
   }
 
-  produceUtxo(id, index, addr, value) {
+  produceUtxo(id, index, addr, value, datum) {
     const utxoRef = id + "#" + index
     //log.info("producing: " + utxoRef + " " + addr + " " + JSON.stringify(value))
     if (this.utxos[utxoRef] === undefined) { // only produce once
-      this.utxos[utxoRef] = [addr, value]
+      this.utxos[utxoRef] = [addr, value, datum]
       if (this.addrs[addr] === undefined) {
         this.addrs[addr] = []
       }
@@ -246,19 +246,13 @@ class DevnetIndexer {
     }
   }
 
-  utxosAtAddress(addr) {
-    // Note: addr comes in as a bech32 address encoded from a credential _without_
-    // the 60 (testnet) or 61 (mainnet) byte prefix.  Don't know a better way except
-    // to decode the bech32 address, add the prefix, then re-encode the credential 
-    // to get an address that matches the indexer database
-    const cred = bech32.decode(addr)
-    const data = new Uint8Array([0x60, ...cred.data])
-    const netAddr = bech32.encode('addr_test', data)
-    if (this.addrs[netAddr] !== undefined) {
-      const utxos = this.addrs[netAddr].map(ref => {
+  utxosAtAddress(bech32Addr) {
+    log.info("Fetching utxos at address: " + bech32Addr)
+    if (this.addrs[bech32Addr] !== undefined) {
+      const utxos = this.addrs[bech32Addr].map(ref => {
         const parts = ref.split("#")
-        const [addr, value] = this.utxos[ref]
-        return [parts[0], parseInt(parts[1], 10), addr, value]
+        const [addr, value, datum] = this.utxos[ref]
+        return [parts[0], parseInt(parts[1], 10), addr, value, datum]
       })
       return utxos
     }
@@ -342,7 +336,7 @@ class OgmiosStateMachine {
         })
         tx.outputs.forEach((output, index) => {
           const value = output.value.ada.lovelace / 1000000.0
-          indexer.produceUtxo(tx.id, index, output.address, output.value)
+          indexer.produceUtxo(tx.id, index, output.address, output.value, output.datum)
           if (jambhalaNames[output.address] !== undefined) {
             jambhalaTransactions[tx.id + "#" + index] = [jambhalaNames[output.address], value]
           }
@@ -409,7 +403,7 @@ class OgmiosStateMachine {
         else str += "         "
         if (i < tx.outputs.length) {
           const value = tx.outputs[i].value.ada.lovelace / 1000000.0
-          indexer.produceUtxo(tx.id, i, tx.outputs[i].address, tx.outputs[i].value)
+          indexer.produceUtxo(tx.id, i, tx.outputs[i].address, tx.outputs[i].value, tx.outputs[i].datum)
           const vStr = "₳ " + value.toFixed(6)
           str += colorAddr(tx.outputs[i].address) + "  " + colorValue(vStr)
         }
@@ -418,7 +412,7 @@ class OgmiosStateMachine {
       }
       for (var i = tx.inputs.length; i < tx.outputs.length; i++) {
         const value = tx.outputs[i].value.ada.lovelace / 1000000.0
-        indexer.produceUtxo(tx.id, i, tx.outputs[i].address, tx.outputs[i].value)
+        indexer.produceUtxo(tx.id, i, tx.outputs[i].address, tx.outputs[i].value, tx.outputs[i].datum)
         const vStr = "₳ " + value.toFixed(6)
         str += " ".repeat(79) + colorAddr(tx.outputs[i].address) + "  " + colorValue(vStr) + "\n"
         h++
@@ -556,16 +550,47 @@ class DevnetProviderBackend {
 
   async getUtxos(params) {
     // Return list of unspent utxos, including mempool tx's
-    return this.indexer.utxosAtAddress(params.address).map(utxo => {
+    let addr
+    if (params.credential !== undefined) {
+      // Note: credential comes in as a bech32 address encoded from a credential _without_
+      // the 60 (testnet) or 61 (mainnet) byte prefix.  Don't know a better way except
+      // to decode the bech32 address, add the prefix, then re-encode the credential 
+      // to get an address that matches the indexer database
+      const cred = bech32.decode(params.credential)
+      const data = new Uint8Array([0x60, ...cred.data])
+      addr = bech32.encode('addr_test', data)
+    } else {
+      addr = params.address
+    }
+    return this.indexer.utxosAtAddress(addr).map(utxo => {
+      log.info(JSON.stringify(utxo))
+      const amounts = utxo[3]
+      const collapsedUtxoValue = {}
+      Object.keys(amounts).map(policy => {
+        if (policy === "ada") {
+          collapsedUtxoValue["lovelace"] = amounts[policy].lovelace
+        } else {
+          Object.keys(amounts[policy]).map(name => {
+            collapsedUtxoValue[policy + name] = amounts[policy][name]
+          })
+        }
+      })
       return {
         txHash: utxo[0],
         outputIndex: utxo[1],
-        assets: { lovelace: utxo[3].ada.lovelace },
+        assets: collapsedUtxoValue,
         address: utxo[2],
         datumHash: null,
-        datum: null,
+        datum: utxo[4],
         scriptRef: null
       }
+    })
+  }
+
+  async getUtxosWithUnit(params) {
+    const utxos = await this.getUtxos(params)
+    return utxos.filter(utxo => {
+      return utxo.assets[params.unit] !== undefined
     })
   }
 
@@ -589,4 +614,3 @@ const osm = new OgmiosStateMachine(indexer)
 const osrh = new OgmiosSynchronousRequestHandler()
 const ogmios = new OgmiosConnection(OGMIOS_PORT, osm, osrh)
 const lpv = new DevnetProviderBackend(osrh, indexer, LUCID_PORT)
-
