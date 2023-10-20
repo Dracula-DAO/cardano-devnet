@@ -1,7 +1,10 @@
 import { Data, Lucid, fromText } from 'lucid-cardano'
 import { DevnetProviderFrontend } from '../lucid-frontend.mjs'
 import { loadJambhalaPrivKey, loadJambhalaNativeScript, loadJambhalaPlutusScript } from '../jambhala-utils.mjs'
-import bech32 from 'bech32-buffer'
+
+process.on('uncaughtException', err => {
+  console.log('Caught exception: ' + err)
+})
 
 // This schema must match the state type for the validator script
 const CounterSchema = Data.Object({
@@ -61,6 +64,7 @@ const main = async () => {
         .attachSpendingValidator(stateProgressionScript)
         .payToContract(scriptAddr, { inline: Data.to(state, CounterSchema) }, { [unit]: 1n })
         .complete()
+
       const signedTx = await tx.sign().complete()
       signedTx.submit()
 

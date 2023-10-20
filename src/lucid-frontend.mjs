@@ -23,6 +23,7 @@ export class DevnetProviderFrontend {
         if (this.queue[obj.id] !== undefined) {
           if (obj.error !== undefined) {
             console.error("Error: " + obj.error)
+            await this.queue[obj.id](obj.error)
           } else {
             await this.queue[obj.id](obj.result)
             delete this.queue[obj.id]
@@ -43,6 +44,12 @@ export class DevnetProviderFrontend {
 
   getProtocolParameters() {
     return PROTOCOL_PARAMETERS_DEFAULT
+  }
+
+  async waitBlock() {
+    await this.query({
+      method: "waitBlock"
+    })
   }
 
   async getUtxos(addressOrCredential) {
@@ -95,6 +102,16 @@ export class DevnetProviderFrontend {
       //console.log(JSON.stringify(obj, null, 2))
       return obj
     }
+  }
+
+  async getUtxosByOutRef(outref) {
+    const obj = await this.query({
+      method: "getUtxosByOutRef",
+      params: {
+        outref: outref
+      }
+    })
+    return obj
   }
 
   async submitTx(tx) {
