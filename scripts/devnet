@@ -50,7 +50,6 @@ mkdir "$TARGETDIR/ipc"
 echo "Prepared devnet, starting cluster now"
 
 # cardano-node >8.0.0 required (assumed to be in path)
-cardano-node --version
 cardano-node run \
   --config $TARGETDIR/cardano-node.json \
   --topology $TARGETDIR/topology.json \
