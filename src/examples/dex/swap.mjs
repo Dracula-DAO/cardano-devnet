@@ -17,7 +17,7 @@ const BondingCurveSchema = Data.Object({
 })
 
 const main = async () => {
-  if (process.argv.length !== 4) {
+  if (process.argv.length !== 5) {
     console.log("Usage: node <script> <wallet_name> <dir (AtoB | BtoA)> <trade in amount>")
     process.exit()
   }
