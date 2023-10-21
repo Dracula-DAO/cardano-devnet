@@ -67,10 +67,6 @@ const main = async () => {
       // that are spent by mempool transactions but have not yet been included
       // into a block.
       const scriptUtxos = await lucid.utxosAtWithUnit(scriptAddr, stateUnit)
-      // Sanity check that we only have one state utxo
-      if (scriptUtxos.length !== 1) {
-        throw Error("Multiple state utxos encountered")
-      }
       // Pull the datum from the state utxo. This is the current "state" of the
       // script.
       const stateUtxo = scriptUtxos[0]

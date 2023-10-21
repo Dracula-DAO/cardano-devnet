@@ -25,7 +25,9 @@ const main = async () => {
   console.log("Using wallet: " + wallet_name)
   lucid.selectWalletFromPrivateKey(loadJambhalaPrivKey(wallet_name))
 
-  const dir = parseInt(process.argv[3], 10)
+  let dir = 0
+  if (process.argv[3] === "AtoB") dir = 1
+  if (process.argv[3] === "BtoA") dir = -1
   const amount = BigInt(parseInt(process.argv[4], 10))
 
   // Get the state token policyId + name
