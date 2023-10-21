@@ -1,7 +1,6 @@
 import { Data, Lucid, fromText } from 'lucid-cardano'
-import { DevnetProviderFrontend } from '../lucid-frontend.mjs'
-import { loadJambhalaPrivKey, loadJambhalaNativeScript, loadJambhalaPlutusScript } from '../jambhala-utils.mjs'
-import bech32 from 'bech32-buffer'
+import { DevnetProviderFrontend } from '../../lucid-frontend.mjs'
+import { loadJambhalaPrivKey, loadJambhalaNativeScript, loadJambhalaPlutusScript } from '../../jambhala-utils.mjs'
 
 // This schema must match the state type for the validator script
 const BondingCurveSchema = Data.Object({
@@ -18,6 +17,11 @@ const BondingCurveSchema = Data.Object({
 })
 
 const main = async () => {
+  if (process.argv.length !== 4) {
+    console.log("Usage: node <script> <wallet_name> <token A amount> <token B amount>")
+    process.exit()
+  }
+
   const provider = new DevnetProviderFrontend("ws://localhost:1338")
   await provider.init()
   const lucid = await Lucid.new(provider, "Custom")
