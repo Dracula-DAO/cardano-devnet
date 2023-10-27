@@ -104,11 +104,11 @@ export class DevnetProviderFrontend {
     }
   }
 
-  async getUtxosByOutRef(outref) {
+  async getUtxosByOutRef(outrefs) {
     const obj = await this.query({
       method: "getUtxosByOutRef",
       params: {
-        outref: outref
+        outrefs: outrefs
       }
     })
     return obj
