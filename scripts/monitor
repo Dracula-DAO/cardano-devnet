@@ -234,11 +234,12 @@ class DevnetIndexer {
     }
   }
 
-  produceUtxo(id, index, addr, value, datum) {
+  produceUtxo(id, index, addr, value, datum, script) {
     const utxoRef = id + "#" + index
+    const lucidScript = this.ogmiosScriptToLucid(script)
     //log.info("producing: " + utxoRef + " " + addr + " " + JSON.stringify(value))
     if (this.utxos[utxoRef] === undefined) { // only produce once
-      this.utxos[utxoRef] = [addr, value, datum]
+      this.utxos[utxoRef] = [addr, value, datum, lucidScript]
       if (this.addrs[addr] === undefined) {
         this.addrs[addr] = []
       }
@@ -251,8 +252,8 @@ class DevnetIndexer {
     if (this.addrs[bech32Addr] !== undefined) {
       const utxos = this.addrs[bech32Addr].map(ref => {
         const parts = ref.split("#")
-        const [addr, value, datum] = this.utxos[ref]
-        return [parts[0], parseInt(parts[1], 10), addr, value, datum]
+        const [addr, value, datum, script] = this.utxos[ref]
+        return [parts[0], parseInt(parts[1], 10), addr, value, datum, script]
       })
       return utxos
     }
@@ -261,8 +262,22 @@ class DevnetIndexer {
 
   utxoAtRef(outref) {
     const parts = outref.split("#")
-    const [addr, value, datum] = this.utxos[outref]
-    return [parts[0], parseInt(parts[1], 10), addr, value, datum]
+    const [addr, value, datum, script] = this.utxos[outref]
+    return [parts[0], parseInt(parts[1], 10), addr, value, datum, script]
+  }
+
+  ogmiosScriptToLucid(script) {
+    if (script === undefined) {
+      return undefined
+    }
+    let t = "not supported"
+    if (script.language === "plutus:v2") {
+      t = "PlutusV2"
+    }
+    return {
+      type: t,
+      script: script.cbor
+    }
   }
 
 }
@@ -347,7 +362,7 @@ class OgmiosStateMachine {
         })
         tx.outputs.forEach((output, index) => {
           const value = output.value.ada.lovelace / 1000000.0
-          indexer.produceUtxo(tx.id, index, output.address, output.value, output.datum)
+          indexer.produceUtxo(tx.id, index, output.address, output.value, output.datum, output.script)
           if (jambhalaNames[output.address] !== undefined) {
             jambhalaTransactions[tx.id + "#" + index] = [jambhalaNames[output.address], value]
           }
@@ -420,7 +435,7 @@ class OgmiosStateMachine {
         else str += "         "
         if (i < tx.outputs.length) {
           const value = tx.outputs[i].value.ada.lovelace / 1000000.0
-          indexer.produceUtxo(tx.id, i, tx.outputs[i].address, tx.outputs[i].value, tx.outputs[i].datum)
+          indexer.produceUtxo(tx.id, i, tx.outputs[i].address, tx.outputs[i].value, tx.outputs[i].datum, tx.outputs[i].script)
           const vStr = "₳ " + value.toFixed(6)
           str += colorAddr(tx.outputs[i].address) + "  " + colorValue(vStr)
         }
@@ -429,7 +444,7 @@ class OgmiosStateMachine {
       }
       for (var i = tx.inputs.length; i < tx.outputs.length; i++) {
         const value = tx.outputs[i].value.ada.lovelace / 1000000.0
-        indexer.produceUtxo(tx.id, i, tx.outputs[i].address, tx.outputs[i].value, tx.outputs[i].datum)
+        indexer.produceUtxo(tx.id, i, tx.outputs[i].address, tx.outputs[i].value, tx.outputs[i].datum, tx.outputs[i].script)
         const vStr = "₳ " + value.toFixed(6)
         str += " ".repeat(79) + colorAddr(tx.outputs[i].address) + "  " + colorValue(vStr) + "\n"
         h++
@@ -610,7 +625,7 @@ class DevnetProviderBackend {
         address: utxo[2],
         datumHash: null,
         datum: utxo[4],
-        scriptRef: null
+        scriptRef: utxo[5]
       }
     })
   }
@@ -623,34 +638,37 @@ class DevnetProviderBackend {
   }
 
   async getUtxosByOutRef(params) {
-    const outref = params.outref
-    const ref = outref.txHash + "#" + outref.outputIndex
-    const utxo = this.indexer.utxoAtRef(ref)
-    const amounts = utxo[3]
-    const collapsedUtxoValue = {}
-    Object.keys(amounts).map(policy => {
-      if (policy === "ada") {
-        collapsedUtxoValue["lovelace"] = amounts[policy].lovelace
-      } else {
-        Object.keys(amounts[policy]).map(name => {
-          collapsedUtxoValue[policy + name] = amounts[policy][name]
-        })
+    const outrefs = params.outrefs
+    return outrefs.map(outref => {
+      const ref = outref.txHash + "#" + outref.outputIndex
+      const utxo = this.indexer.utxoAtRef(ref)
+      const amounts = utxo[3]
+      const collapsedUtxoValue = {}
+      Object.keys(amounts).map(policy => {
+        if (policy === "ada") {
+          collapsedUtxoValue["lovelace"] = amounts[policy].lovelace
+        } else {
+          Object.keys(amounts[policy]).map(name => {
+            collapsedUtxoValue[policy + name] = amounts[policy][name]
+          })
+        }
+      })
+      const obj = {
+        txHash: utxo[0],
+        outputIndex: utxo[1],
+        assets: collapsedUtxoValue,
+        address: utxo[2],
+        datumHash: null,
+        datum: utxo[4],
+        scriptRef: utxo[5]
       }
+      return obj
     })
-    const obj = {
-      txHash: utxo[0],
-      outputIndex: utxo[1],
-      assets: collapsedUtxoValue,
-      address: utxo[2],
-      datumHash: null,
-      datum: utxo[4],
-      scriptRef: null
-    }
-    return obj
   }
 
   async submitTx(tx) {
     const res = await this.ogmios.submitTx(tx.cbor)
+    log.info("Submitting transaction: " + tx.cbor.length + " bytes")
     return res.transaction.id
   }
 
