@@ -16,4 +16,3 @@ When Transaction B is created, the mempool is queried for the latest transaction
 We can sequence any number of transactions in the mempool chain, limited only by block size and race conditions due to transaction propagation times.
 
 ![UTxO Sequencing](./UTxO%20Sequencing.png)
-

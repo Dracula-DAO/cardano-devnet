@@ -545,7 +545,7 @@ class OgmiosSynchronousRequestHandler {
 
 }
 
-class DevnetProviderBackend {
+class LucidProviderBackend {
 
   constructor(ogmios, osm, indexer, port) {
     this.ogmios = ogmios
@@ -686,4 +686,4 @@ const indexer = new DevnetIndexer()
 const osm = new OgmiosStateMachine(indexer)
 const osrh = new OgmiosSynchronousRequestHandler()
 const ogmios = new OgmiosConnection(OGMIOS_PORT, osm, osrh)
-const lpv = new DevnetProviderBackend(osrh, osm, indexer, LUCID_PORT)
+const lpv = new LucidProviderBackend(osrh, osm, indexer, LUCID_PORT)

@@ -1,8 +1,16 @@
-# cardano-devnet
-This is a local Cardano development network and supporting tools.
+# Cardano Devnet
 
-This repository has been built to work as a submodule under the jambhala
-framework.
+This repository creates a completely local Cardano network that runs only on the development machine, with average block times that can be specified as a number of seconds from the command line.  It has been built to work as a submodule under the [Jambhala](https://github.com/iburzynski/jambhala) framework. 
+
+There are several additional features included in addition to a locally running node:
+
+* Live monitor - a terminal-based monitor script that shows high level transaction information for confirmed transactions, as well as pending transactions in the mempool.
+* Lightweight indexer - a very simple indexer built to work with the [Lucid](https://lucid.spacebudz.io/) framework.
+* Lucid provider - a Lucid provider that connects the client-side Lucid API to the node monitor and indexer.
+
+In the examples directory there are several examples of passing state through a sequence of transactions that demonstrate how multiple Cardano transactions can be chained to pass a script state from one transaction to the next without requiring the previous transaction to be included in a block. The so-called [Cardano EUTxO bottleneck](https://builtoncardano.com/blog/concurrency-and-cardano-a-problem-a-challenge-or-nothing-to-worry-about) of one transaction per script address per block does not exist, provided there is a way to query the blockchain mempool.
+
+Currenly only nodes that are block producers have access to the full network mempool, which means that stake pool operators could use a method such as the one demonstrated in this repository to offer a mempool query service to users as an additional way to provide value to the network.
 
 ## Dependencies:
 

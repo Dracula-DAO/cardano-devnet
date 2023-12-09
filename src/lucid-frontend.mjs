@@ -1,6 +1,6 @@
 import { C, PROTOCOL_PARAMETERS_DEFAULT } from "lucid-cardano"
 
-export class DevnetProviderFrontend {
+export class LucidProviderFrontend {
 
   constructor(url) {
     this.url = url
