@@ -14,8 +14,7 @@ Currenly only nodes that are block producers have access to the full network mem
 
 ## Component Diagram
 
-The diagram below shows how the :w
-components provided by this repository work. Both cardano-node and ogmios are provided by IOHK and are assumed to be in the path.
+The diagram below shows how the components provided by this repository work. Both cardano-node and ogmios are provided by IOHK and are assumed to be in the path.
 
 ![Component Diagram](./Component%20Diagram.png)
 
