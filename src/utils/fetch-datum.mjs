@@ -1,10 +1,10 @@
 import { Data, Lucid, fromText } from 'lucid-cardano'
-import { DevnetProviderFrontend } from '../lucid-frontend.mjs'
+import { LucidProviderFrontend } from '../lucid-frontend.mjs'
 import { loadJambhalaPrivKey, loadJambhalaNativeScript, loadJambhalaPlutusScript } from '../jambhala-utils.mjs'
 import bech32 from 'bech32-buffer'
 
 const main = async () => {
-  const provider = new DevnetProviderFrontend("ws://localhost:1338")
+  const provider = new LucidProviderFrontend("ws://localhost:1338")
   await provider.init()
   const lucid = await Lucid.new(provider, "Custom")
 

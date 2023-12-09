@@ -1,6 +1,6 @@
 import { C, Lucid } from 'lucid-cardano'
 import { decode as decodeCbor } from 'cbor-x'
-import { DevnetProviderFrontend } from './src/lucid-frontend.mjs'
+import { LucidProviderFrontend } from './src/lucid-frontend.mjs'
 
 const wallet_name = process.argv[2]
 const to_addr_name = process.argv[3]
@@ -8,7 +8,7 @@ const value = Math.floor(process.argv[4] * 1000000.0)
 console.log("Using wallet: " + wallet_name)
 
 const main = async () => {
-  const provider = new DevnetProviderFrontend("ws://localhost:1338")
+  const provider = new LucidProviderFrontend("ws://localhost:1338")
   await provider.init()
   const lucid = await Lucid.new(provider, "Custom")
 
