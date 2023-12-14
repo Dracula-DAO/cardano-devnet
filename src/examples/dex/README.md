@@ -1,20 +1,20 @@
-# How to run the State Counter example
+# How to run the Dex example
 
 ## Step 1 - Compile the plutus script
 
 ### 1.a - copy haskell source into Jambhala framework
 
 ```
-$ cp jambhala/StateProgression.hs $PROJECT_ROOT/src/Contracts
+$ cp jambhala/BondingCurve.hs $PROJECT_ROOT/src/Contracts
 $ cd $PROJECT_ROOT/src/Contracts
-$ git add StateProgression.hs
+$ git add BondingCurve.hs
 ```
 
 ### 1.b - add StateProgression into the contracts variable
 
 ```
 contracts =
-  [ StateProgression.stateExports
+  [ BondingCurve.stateExports
   ]
 ```
 
@@ -105,17 +105,30 @@ The state token NFT gets passed from transaction to transaction to track the lat
 $ node mint-state-token.mjs
 ```
 
-### 3.d - seed the state with zero
+### 3.d - mint some trading tokens for alice and bob
+
+```
+$ node mint-trading-tokens.mjs alice 10000 10000
+$ node mint-trading-tokens.mjs bob 10000 10000
+```
+
+### 3.e - seed the state with initial values and trading token type
 
 ```
 $ node seed-state.mjs
 ```
 
-### 3.e - increment the state token from alice and bob wallets
+### 3.f - add some initial liquidity, 1000 tokenA and 500 tokenB
 
 ```
-$ node increment-state.mjs alice
-$ node increment-state.mjs bob
+$ node add-liquidity.mjs alice 1000 500
+```
+
+### 3.g - perform some swaps
+
+```
+$ node swap.mjs alice AtoB 10
+$ node swap.mjs bob BtoA 7
 ```
 
 Note that you don't have to wait for a block to confirm before incrementing the state! This is because you're using the devnet indexer that passes mempool transactions back to Lucid automatically behind the scenes.
