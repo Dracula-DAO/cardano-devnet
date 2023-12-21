@@ -70,7 +70,7 @@ $ node --version
 ## Installation
 
 1. Ensure ogmios >=6.0.0 is in your PATH. Tested with 6.0.0.
-2. Ensure cardano-node >8.0.0 is in your PATH. Tested with 8.1.2.
+2. Ensure cardano-node >8.7.2 is in your PATH. Tested with 8.7.2.
 3. Run 'npm install' to install the node.js dependencies from package.json.
 
 ### Use:
