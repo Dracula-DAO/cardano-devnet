@@ -1,30 +1,38 @@
 {
   "Protocol": "Cardano",
-
   "ByronGenesisFile": "genesis-byron.json",
+  "ByronGenesisHash": "",
   "ShelleyGenesisFile": "genesis-shelley.json",
+  "ShelleyGenesisHash": "",
   "AlonzoGenesisFile": "genesis-alonzo.json",
+  "AlonzoGenesisHash": "",
   "ConwayGenesisFile": "genesis-conway.json",
-
+  "ConwayGenesisHash": "",
   "ApplicationName": "cardano-sl",
   "ApplicationVersion": 1,
   "MaxKnownMajorProtocolVersion": 2,
   "LastKnownBlockVersion-Alt": 0,
   "LastKnownBlockVersion-Major": 6,
   "LastKnownBlockVersion-Minor": 0,
-
   "TestShelleyHardForkAtEpoch": 0,
   "TestAllegraHardForkAtEpoch": 0,
   "TestMaryHardForkAtEpoch": 0,
   "TestAlonzoHardForkAtEpoch": 0,
   "TestBabbageHardForkAtEpoch": 0,
-
   "RequiresNetworkMagic": "RequiresNoMagic",
-
   "minSeverity": "Info",
-  "defaultBackends": ["KatipBK"],
-  "defaultScribes": [[ "StdoutSK", "stdout" ]],
-  "setupBackends": ["KatipBK"],
+  "defaultBackends": [
+    "KatipBK"
+  ],
+  "defaultScribes": [
+    [
+      "StdoutSK",
+      "stdout"
+    ]
+  ],
+  "setupBackends": [
+    "KatipBK"
+  ],
   "setupScribes": [
     {
       "scFormat": "ScJson",
@@ -33,10 +41,8 @@
       "scRotation": null
     }
   ],
-
   "TurnOnLogMetrics": true,
   "TurnOnLogging": true,
-
   "TracingVerbosity": "NormalVerbosity",
   "TraceBlockFetchClient": false,
   "TraceBlockFetchDecisions": false,
@@ -64,17 +70,21 @@
   "TraceTxInbound": false,
   "TraceTxOutbound": false,
   "TraceTxSubmissionProtocol": false,
-
   "options": {
     "mapBackends": {
-      "cardano.node.metrics": [ "EKGViewBK" ],
-      "cardano.node.resources": [ "EKGViewBK" ]
+      "cardano.node.metrics": [
+        "EKGViewBK"
+      ],
+      "cardano.node.resources": [
+        "EKGViewBK"
+      ]
     },
     "mapSubtrace": {
-      "cardano.node.metrics": { "subtrace": "Neutral" }
+      "cardano.node.metrics": {
+        "subtrace": "Neutral"
+      }
     }
   },
-
   "ExperimentalHardForksEnabled": true,
   "ExperimentalProtocolsEnabled": true
 }

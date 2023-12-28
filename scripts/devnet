@@ -37,6 +37,7 @@ if [[ -v PROJECT_ROOT ]]; then
     cp $BASEDIR/config/credentials/faucet.addr $PROJECT_ROOT/cardano-cli-guru/assets/addr
 fi
 
+# Update start time params
 echo '{"Producers": []}' > "$TARGETDIR/topology.json"
 sed -i "s/\"startTime\": [0-9]*/\"startTime\": $(date +%s)/" "$TARGETDIR/genesis-byron.json" && \
 sed -i "s/\"systemStart\": \".*\"/\"systemStart\": \"$(date -u +%FT%TZ)\"/" "$TARGETDIR/genesis-shelley.json"
@@ -45,6 +46,20 @@ sed -i "s/\"systemStart\": \".*\"/\"systemStart\": \"$(date -u +%FT%TZ)\"/" "$TA
 COEFF=$(jq -n 1/$1)
 echo "Setting slot time to $1: coeffecient=$COEFF"
 sed -i "s/\"activeSlotsCoeff\": .*/\"activeSlotsCoeff\": $COEFF,/" "$TARGETDIR/genesis-shelley.json"
+
+# Recalculate genesis hashes
+BYRON_HASH=$(cardano-cli byron genesis print-genesis-hash --genesis-json $TARGETDIR/genesis-byron.json)
+echo "Byron hash: $BYRON_HASH"
+sed -i "s/\"ByronGenesisHash\": .*/\"ByronGenesisHash\": \"$BYRON_HASH\",/" "$TARGETDIR/cardano-node.json"
+SHELLEY_HASH=$(cardano-cli genesis hash --genesis $TARGETDIR/genesis-shelley.json)
+echo "Shelley hash: $SHELLEY_HASH"
+sed -i "s/\"ShelleyGenesisHash\": .*/\"ShelleyGenesisHash\": \"$SHELLEY_HASH\",/" "$TARGETDIR/cardano-node.json"
+ALONZO_HASH=$(cardano-cli genesis hash --genesis $TARGETDIR/genesis-alonzo.json)
+echo "Alonzo hash: $ALONZO_HASH"
+sed -i "s/\"AlonzoGenesisHash\": .*/\"AlonzoGenesisHash\": \"$ALONZO_HASH\",/" "$TARGETDIR/cardano-node.json"
+CONWAY_HASH=$(cardano-cli genesis hash --genesis $TARGETDIR/genesis-conway.json)
+echo "Conway hash: $CONWAY_HASH"
+sed -i "s/\"ConwayGenesisHash\": .*/\"ConwayGenesisHash\": \"$CONWAY_HASH\",/" "$TARGETDIR/cardano-node.json"
 
 find $TARGETDIR -type f -exec chmod 0400 {} \;
 echo "Prepared devnet, starting cluster now"
