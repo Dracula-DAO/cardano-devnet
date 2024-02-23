@@ -25,23 +25,25 @@ let currentBlockHash = ""
 let currentSlot = 0
 
 // Load Jambhala addresses
-const JAMBHALA_ADDRESSES = process.env.PROJECT_ROOT + "/cardano-cli-guru/assets/addr"
-const jambhalaAddresses = {} // name lookup by address
-const jambhalaNames = {} // address lookup by name
-const files = fs.readdirSync(JAMBHALA_ADDRESSES)
-files.forEach((file, index) => {
-  const name = path.basename(file, '.addr')
-  const ext = path.extname(file)
-  if (ext === ".addr") {
-    const addressFile = path.join(JAMBHALA_ADDRESSES, file)
-    const addr = fs.readFileSync(addressFile).toString()
-    jambhalaAddresses[name] = addr
-    jambhalaNames[addr] = name
-  }
-})
+if (process.env.PROJECT_ROOT !== undefined) {
+  const JAMBHALA_ADDRESSES = process.env.PROJECT_ROOT + "/cardano-cli-guru/assets/addr"
+  const jambhalaAddresses = {} // name lookup by address
+  const jambhalaNames = {} // address lookup by name
+  const files = fs.readdirSync(JAMBHALA_ADDRESSES)
+  files.forEach((file, index) => {
+    const name = path.basename(file, '.addr')
+    const ext = path.extname(file)
+    if (ext === ".addr") {
+      const addressFile = path.join(JAMBHALA_ADDRESSES, file)
+      const addr = fs.readFileSync(addressFile).toString()
+      jambhalaAddresses[name] = addr
+      jambhalaNames[addr] = name
+    }
+  })
+}
 
 // Load Jambhala protocol params
-const params = JSON.parse(fs.readFileSync(process.env.PARAMS_PATH))
+//const params = JSON.parse(fs.readFileSync(process.env.PARAMS_PATH))
 
 // Used to store indexed transactions by utxo ref. Since this is just a local devnet
 // we're not concerned about the size of this mapping. On a global testnet or the
