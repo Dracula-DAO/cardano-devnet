@@ -25,10 +25,10 @@ let currentBlockHash = ""
 let currentSlot = 0
 
 // Load Jambhala addresses
-if (process.env.PROJECT_ROOT !== undefined) {
-  const JAMBHALA_ADDRESSES = process.env.PROJECT_ROOT + "/cardano-cli-guru/assets/addr"
-  const jambhalaAddresses = {} // name lookup by address
-  const jambhalaNames = {} // address lookup by name
+const jambhalaAddresses = {} // name lookup by address
+const jambhalaNames = {} // address lookup by name
+if (process.env.CARDANO_CLI_GURU !== undefined) {
+  const JAMBHALA_ADDRESSES = process.env.CARDANO_CLI_GURU + "/assets/addr"
   const files = fs.readdirSync(JAMBHALA_ADDRESSES)
   files.forEach((file, index) => {
     const name = path.basename(file, '.addr')
