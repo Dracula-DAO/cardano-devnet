@@ -16,7 +16,7 @@ Currenly only nodes that are block producers have access to the full network mem
 
 The diagram below shows how the components provided by this repository work. [Cardano node](https://github.com/IntersectMBO/cardano-node) and [Ogmios](https://github.com/CardanoSolutions/ogmios) are assumed to be in the path.
 
-![Component Diagram](./Component%20Diagram.png)
+![Component Diagram](./docs/images/Component%20Diagram.png)
 
 ## Installation
 
