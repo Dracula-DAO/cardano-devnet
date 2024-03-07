@@ -1,0 +1,185 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const WebSocket = require('ws');
+
+const DB_ROOT=process.env.PWD + "/db"
+const OGMIOS_PORT = 1337
+
+// Genesis constants - faucet initial utxo to seed all other tx's
+const ADDR_FAUCET = "addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv"
+const GENESIS_FAUCET_HASH = "8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284"
+const GENESIS_FAUCET_LOVELACE = 900000000000
+
+class DBTransformer {
+
+  transformBlock(ogmiosBlock) {
+    return {
+      id: ogmiosBlock.id,
+      height: ogmiosBlock.height,
+      slot: ogmiosBlock.slot,
+      ancestor: ogmiosBlock.ancestor,
+    }
+  }
+
+  transformTransaction(ogmiosTransaction) {
+    return {
+      id: ogmiosTransaction.id,
+      spends: ogmiosTransaction.spends,
+      fee: ogmiosTransaction.fee,
+      validityInterval: ogmiosTransaction.validityInterval,
+      signatories: ogmiosTransaction.signatories
+    }
+  }
+
+}
+
+class DBWriter {
+
+  constructor(db, transformer) {
+    this.db = db
+    this.transformer = transformer
+    try {
+      fs.rmSync(this.db, {
+        recursive: true
+      })
+      fs.mkdirSync(this.db)
+      fs.mkdirSync(this.db + "/blocks")
+      fs.mkdirSync(this.db + "/chain")
+      fs.mkdirSync(this.db + "/transactions")
+      fs.mkdirSync(this.db + "/addresses")
+
+      // Populate initial faucet utxo (genesis), hardcoded because the hash will
+      // never change
+      const genesis_tx_path = this.db + "/transactions/" + GENESIS_FAUCET_HASH
+      fs.mkdirSync(genesis_tx_path + "/outputs", { recursive: true })
+      fs.writeFileSync(genesis_tx_path + "/outputs/0", JSON.stringify({
+        address: ADDR_FAUCET,
+        value: {
+          ada: {
+            lovelace: GENESIS_FAUCET_LOVELACE
+          }
+        }
+      }, null, 2))
+      const genesis_address_path = this.db + "/addresses/" + ADDR_FAUCET
+      fs.mkdirSync(genesis_address_path)
+      fs.symlinkSync(genesis_tx_path + "/outputs/0", genesis_address_path + "/" + GENESIS_FAUCET_HASH + "#0")
+    } catch (alreadyExists) {}
+  }
+
+  writeBlock(block) {
+    const dbBlock = this.transformer.transformBlock(block)
+    const formattedBlock = JSON.stringify(dbBlock, null, 2)
+    fs.mkdirSync(this.db + "/blocks/" + dbBlock.id + "/transactions", { recursive: true })
+    fs.writeFileSync(this.db + "/blocks/" + dbBlock.id + "/block", formattedBlock)
+    fs.symlinkSync(this.db + "/blocks/" + dbBlock.id, this.db + "/chain/" + dbBlock.height)
+    block.transactions.forEach((tx, index) => {
+      this.writeTransaction(block, tx)
+      fs.symlinkSync(this.db + "/transactions/" + tx.id, this.db + "/blocks/" + block.id + "/transactions/" + index)
+    })
+    // Write over file, do not remove, to allow file watching
+    fs.writeFileSync(this.db + "/latest", formattedBlock)
+  }
+
+  writeTransaction(block, tx) {
+    const dbTx = this.transformer.transformTransaction(tx)
+    const formattedTransaction = JSON.stringify(dbTx, null, 2)
+    fs.mkdirSync(this.db + "/transactions/" + tx.id)
+    fs.mkdirSync(this.db + "/transactions/" + tx.id + "/inputs")
+    fs.mkdirSync(this.db + "/transactions/" + tx.id + "/outputs")
+    fs.writeFileSync(this.db + "/transactions/" + tx.id + "/tx", formattedTransaction)
+    fs.symlinkSync(this.db + "/blocks/" + block.id + "/block", this.db + "/transactions/" + tx.id + "/block")
+    tx.inputs.forEach((input, index) => {
+      fs.symlinkSync(this.db + "/transactions/" + input.transaction.id + "/outputs/" + input.index, this.db + "/transactions/" + tx.id + "/inputs/" + index)
+      const inputUtxoPath = this.db + "/transactions/" + input.transaction.id + "/outputs/" + input.index
+      const inputUtxo = JSON.parse(fs.readFileSync(inputUtxoPath))
+      inputUtxo.spentBy = tx.id
+      fs.writeFileSync(inputUtxoPath, JSON.stringify(inputUtxo, null, 2))
+      fs.rmSync(this.db + "/addresses/" + inputUtxo.address + "/" + input.transaction.id + "#" + input.index)
+    })
+    tx.outputs.forEach((output, index) => {
+      fs.writeFileSync(this.db + "/transactions/" + tx.id + "/outputs/" + index, JSON.stringify(output, null, 2))
+      try {
+        fs.mkdirSync(this.db + "/addresses/" + output.address)
+      } catch (alreadyExists) {}
+      fs.symlinkSync(this.db + "/transactions/" + tx.id + "/outputs/" + index, 
+        this.db + "/addresses/" + output.address + "/" + tx.id + "#" + index)
+    })
+  }
+
+}
+
+class OgmiosConnection {
+
+  constructor(port, stateMachine) {
+    // Ogmios connection
+    this.ogmiosServer = new WebSocket("ws://localhost:" + port)
+    this.nextId = 0
+    this.stateMachine = stateMachine
+
+    this.ogmiosServer.once('open', async () => {
+      await this.stateMachine.init(this)
+    })
+
+    this.ogmiosServer.on('message', msg => {
+      const response = JSON.parse(msg)
+      if (this.stateMachine[response.method] !== undefined) {
+        this.stateMachine[response.method](response)
+      }
+    })
+  }
+
+  send(jsonRpcObj) {
+    jsonRpcObj.jsonrpc = "2.0"
+    jsonRpcObj.id = this.nextId++
+    this.ogmiosServer.send(JSON.stringify(jsonRpcObj))
+    return jsonRpcObj.id
+  }
+
+}
+
+class OgmiosStateMachine {
+
+  constructor(indexer) {
+    this.indexer = indexer
+    this.blockCallbacks = []
+  }
+
+  async init(ogmios) {
+    this.ogmios = ogmios
+
+    // Initiate sync and mempool monitoring
+    this.ogmios.send({
+      method: "findIntersection",
+      params: {
+        points: ["origin"]
+      }
+    })
+  }
+
+  async waitBlock(cb) {
+    this.blockCallbacks.push(cb)
+  }
+
+  findIntersection(msg) {
+    this.ogmios.send({
+      method: "nextBlock"
+    })
+  }
+
+  nextBlock(msg) {
+    if (msg.result.block !== undefined) {
+      const density = 100.0 * msg.result.block.height / msg.result.block.slot
+      this.indexer.writeBlock(msg.result.block)
+      console.log(`Latest: ${msg.result.block.height} id[${msg.result.block.id}] transactions[${msg.result.block.transactions.length}]` )
+    }
+    this.ogmios.send({
+      method: "nextBlock"
+    })
+  }
+
+}
+
+const writer = new DBWriter(DB_ROOT, new DBTransformer())
+const osm = new OgmiosStateMachine(writer)
+const ogmios = new OgmiosConnection(OGMIOS_PORT, osm)
