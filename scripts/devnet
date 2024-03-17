@@ -7,7 +7,7 @@
 
 # Prepare a "target" directory holding credentials, a dummy topology and
 # "up-to-date" genesis files. If the directory exists, it is wiped out.
-set -e
+set -em
 
 if [[ ! $1 == ?(-)+([0-9]) ]]; then
     SCRIPTNAME=$(basename $0)
@@ -15,7 +15,7 @@ if [[ ! $1 == ?(-)+([0-9]) ]]; then
     exit -1
 fi
 
-BASEDIR=.
+BASEDIR=$DEVNET_ROOT
 TARGETDIR="$BASEDIR/target"
 CARDANO_NODE_SOCKET_PATH="$TARGETDIR/node.socket"
 
@@ -24,9 +24,9 @@ CARDANO_NODE_SOCKET_PATH="$TARGETDIR/node.socket"
 cp -af "$BASEDIR/config/genesis/" "$TARGETDIR"
 cp -af "$BASEDIR/config/protocol-parameters.json" "$TARGETDIR"
 
-# Copy faucet keys, address to the jambhala assets directory
+# Copy faucet keys, address to the CARDANO_CLI_GURU assets directory
 if [[ -v CARDANO_CLI_GURU ]]; then
-    echo "Copying faucet keys into jambhala assets directory"
+    echo "Copying faucet keys into CARDANO_CLI_GURU assets directory"
     cp $BASEDIR/config/credentials/faucet.vkey $CARDANO_CLI_GURU/assets/keys
     cp $BASEDIR/config/credentials/faucet.skey $CARDANO_CLI_GURU/assets/keys
     cp $BASEDIR/config/credentials/faucet.addr $CARDANO_CLI_GURU/assets/addr
@@ -57,27 +57,4 @@ echo "Conway hash: $CONWAY_HASH"
 sed -i "s/\"ConwayGenesisHash\": .*/\"ConwayGenesisHash\": \"$CONWAY_HASH\",/" "$TARGETDIR/cardano-node.json"
 
 find $TARGETDIR -type f -exec chmod 0400 {} \;
-echo "Prepared devnet, starting cluster now"
-
-# cardano-node assumed to be in path
-echo cardano-node run \
-  --config $TARGETDIR/cardano-node.json \
-  --topology $TARGETDIR/topology.json \
-  --database-path $TARGETDIR/db \
-  --socket-path $CARDANO_NODE_SOCKET_PATH \
-  --shelley-operational-certificate $TARGETDIR/opcert.cert \
-  --shelley-kes-key $TARGETDIR/kes.skey \
-  --shelley-vrf-key $TARGETDIR/vrf.skey &
-cardano-node run \
-  --config $TARGETDIR/cardano-node.json \
-  --topology $TARGETDIR/topology.json \
-  --database-path $TARGETDIR/db \
-  --socket-path $CARDANO_NODE_SOCKET_PATH \
-  --shelley-operational-certificate $TARGETDIR/opcert.cert \
-  --shelley-kes-key $TARGETDIR/kes.skey \
-  --shelley-vrf-key $TARGETDIR/vrf.skey &
-
-# ogmios >6.0.0 required (assumed to be in path)
-ogmios --node-socket $CARDANO_NODE_SOCKET_PATH \
-       --node-config $TARGETDIR/cardano-node.json > /dev/null 2>&1
-
+echo "Prepared devnet"

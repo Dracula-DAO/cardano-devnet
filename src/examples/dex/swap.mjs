@@ -3,6 +3,16 @@ import { LucidProviderFrontend } from '../../lucid-frontend.mjs'
 import { loadJambhalaPrivKey, loadJambhalaNativeScript, loadJambhalaPlutusScript } from '../../jambhala-utils.mjs'
 
 // This schema must match the state type for the validator script
+/*
+Haskell data type:
+
+data BondingCurveState = BondingCurveState
+  { tokenA :: AssetClass,
+    amountTokenA :: Integer,
+    tokenB :: AssetClass,
+    amountTokenB :: Integer
+  }
+*/
 const BondingCurveSchema = Data.Object({
   tokenA: Data.Object({
     currencySymbol: Data.Bytes(),
