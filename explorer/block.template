@@ -1,0 +1,69 @@
+<html>
+  <head>
+    <style>
+      rect { fill: white; stroke: black; stroke-width: 2 }
+      line { stroke: black; }
+      #current rect { fill: black; }
+      #current text { fill: white; }
+    </style>
+  </head>
+  <body>
+    <h1>Cardano Devnet Explorer</h1>
+    <h2>Viewing block: {{ height }}</h2>
+    <div>
+    {% if height >= 1 %}
+    {% if showExtendLeft %}
+    ...
+    {% endif %}
+    <a href="/chain/{{ height | minus: 1}}">
+    <svg width="50" height="50">
+      <g>
+        <rect width="50" height="50" x="0" y="0"/>
+        <text x="15" y="15">{{ height | minus: 1}}</text>
+      </g>
+    </svg></a>
+    <svg width="30" height="50">
+      <defs>
+       <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+         <path d="M0,0 L0,6 L9,3 z"></path>
+       </marker>
+      </defs>
+      <line x1="0" y1="25" x2="22" y2="25" marker-end="url(#arrow)"/>
+    </svg>
+    {% endif %}
+    <svg id="current" width="50" height="50">
+      <g>
+        <rect width="50" height="50" x="0" y="0"/>
+        <text x="15" y="15">{{ height }}</text>
+      </g>
+    </svg>
+    {% if height < maxHeight %}
+    <svg width="30" height="50">
+      <defs>
+       <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+         <path d="M0,0 L0,6 L9,3 z"></path>
+       </marker>
+      </defs>
+      <line x1="0" y1="25" x2="22" y2="25" marker-end="url(#arrow)"/>
+    </svg>
+    <a href="/chain/{{ height | plus: 1}}">
+    <svg width="50" height="50">
+      <g>
+        <rect width="50" height="50" x="0" y="0"/>
+        <text x="15" y="15">{{ height | plus: 1}}</text>
+      </g>
+    </svg></a>
+    {% endif %}
+    {% if showExtendRight %}
+    ...
+    {% endif %}
+    </div>
+    <div>Hash: {{ id }}</div>
+    <div>Slot: {{ slot }}</div>
+    <div>{{ transactions.length }} transactions</div>
+    {% for tx in transactions %}
+      <div><a href="/transaction/{{ tx }}">{{ tx }}</a></div>
+    {% endfor %}
+    <h2>Chain height: <a href="/chain/{{ maxHeight }}">{{ maxHeight }}</a></h2>
+  </body>
+</html>
