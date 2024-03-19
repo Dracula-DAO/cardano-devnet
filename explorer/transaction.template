@@ -1,13 +1,73 @@
 <html>
-  <head></head>
+  <head>
+    <style>
+* {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+}
+table {
+  margin-top: 20px;
+  border-spacing: 0px;
+}
+tr.utxo td {
+  border-top: 1px solid #000;
+}
+td.index {
+  width: 40px;
+}
+tr.value td {
+  padding-left: 20px;
+}
+.amount {
+  text-align: right;
+  padding-left: 20px;
+}
+    </style>
+  </head>
   <body>
     <h1>Cardano Devnet Explorer</h1>
     <h2>Viewing transaction: {{ id }}</h2>
+    <h3>Block <a href="/block/{{ block }}">{{ block }}</a></h3>
+    <table>
+    <thead>
+      <tr><th colspan="3">Inputs</th></tr>
+    </thead>
+    <tbody>
     {% for input in inputs %}
-      <div><a>Input {{ forloop.index0 }}: {{ input }}</a></div>
+      <tr class="utxo">
+      <td class="index">{{ forloop.index0 }}</td><td colspan="2">{{ input.addr }}</td>
+      </tr>
+      <tr>
+      <td></td><td colspan="2">tx <a href="/transaction/{{ input.hash }}">{{ input.hash }}</a></td>
+      </tr>
+      {% for v in input.value %}
+        <tr class="value">
+        <td></td><td>{{ v[0] }}</td><td class="amount">{{ v[1] }}</td>
+        </tr>
+      {% endfor %}
     {% endfor %}
+    </tbody>
+    </table>
+    <table>
+    <thead>
+      <tr><th colspan="3">Outputs</th></tr>
+    </thead>
+    <tbody>
     {% for output in outputs %}
-      <div><a>Output {{ forloop.index0 }}: {{ output }}</a></div>
+      <tr class="utxo">
+      <td class="index">{{ forloop.index0 }}</td><td colspan="2">{{ output.addr }}</td>
+      </tr>
+      <tr>
+      <td></td><td colspan="2">spent by <a href="/transaction/{{ output.spentBy }}">{{ output.spentBy }}</a></td>
+      </tr>
+      {% for v in output.value %}
+        <tr class="value">
+        <td></td><td>{{ v[0] }}</td><td class="amount">{{ v[1] }}</td>
+        </tr>
+      {% endfor %}
     {% endfor %}
+    </tbody>
+    </table>
   </body>
 </html>
