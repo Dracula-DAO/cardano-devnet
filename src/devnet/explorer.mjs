@@ -5,8 +5,29 @@ const app = express()
 const engine = new Liquid()
 
 const PORT=3000
-const DB=process.env.DEVNET_ROOT + "/db"
 const TEMPLATE=process.env.DEVNET_ROOT + "/explorer"
+
+let DB=process.env.DEVNET_ROOT + "/db"
+if (process.env.CUSTOM_DB_ROOT !== undefined) {
+  DB = process.env.CUSTOM_DB_ROOT
+}
+console.log("Using database=" + DB)
+
+// Utils
+
+function small_hash(hash) {
+    return hash.slice(0, 6) + ".." + hash.slice(-6)
+}
+
+function small_addr(addr) {
+    return addr.slice(0, 15) + ".." + addr.slice(-6)
+}
+
+function formatADA(lovelace) {
+    let ada = ("" + lovelace).slice(0,-6)
+    if (ada === "") ada = "0"
+    return ada + "." + ("000000" + lovelace).slice(-6)
+}
 
 app.get('/', async (req, res) => {
   const blockTemplate = fs.readFileSync(TEMPLATE + "/block.template").toString()
@@ -19,6 +40,16 @@ app.get('/', async (req, res) => {
   res.send(content)
 })
 
+app.get("/css/:path*", async (req, res) => {
+  res.setHeader("Content-Type", "text/css")
+  res.sendFile(TEMPLATE + "/css/" + req.params.path)
+})
+
+app.get("/js/:path*", async (req, res) => {
+  res.setHeader("Content-Type", "text/javascript")
+  res.sendFile(TEMPLATE + "/js/" + req.params.path)
+})
+
 app.get("/block/:id", async (req, res) => {
   const blockTemplate = fs.readFileSync(TEMPLATE + "/block.template").toString()
   const latest = JSON.parse(fs.readFileSync(DB + "/latest"))
@@ -27,6 +58,14 @@ app.get("/block/:id", async (req, res) => {
   block.maxHeight = latest.height
   block.showExtendLeft = block.height > 1
   block.showExtendRight = block.height < latest.height - 1
+  block.transactions = block.transactions.map(t => {
+    const tobj = JSON.parse(fs.readFileSync(DB + "/transactions/" + t + "/tx"))
+    return {
+      hash: [t, small_hash(t)],
+      inputCount: tobj.inputs.length,
+      outputCount: tobj.outputs.length
+    }
+  })
   const content = await engine.parseAndRender(blockTemplate, block)
   res.setHeader("Content-Type", "text/html")
   res.send(content)
@@ -40,45 +79,71 @@ app.get("/chain/:height", async (req, res) => {
   block.maxHeight = latest.height
   block.showExtendLeft = block.height > 1
   block.showExtendRight = block.height < latest.height - 1
+  block.transactions = block.transactions.map(t => {
+    const tobj = JSON.parse(fs.readFileSync(DB + "/transactions/" + t + "/tx"))
+    return {
+      hash: [t, small_hash(t)],
+      inputCount: tobj.inputs.length,
+      outputCount: tobj.outputs.length
+    }
+  })
   const content = await engine.parseAndRender(blockTemplate, block)
   res.setHeader("Content-Type", "text/html")
   res.send(content)
 })
 
 app.get("/transaction/:id", async (req, res) => {
-  const block = JSON.parse(fs.readFileSync(DB + "/transactions/" + req.params.id + "/block"))
   const tx = JSON.parse(fs.readFileSync(DB + "/transactions/" + req.params.id + "/tx"))
-  tx.block = block.id
-  tx.inputs = tx.inputs.map(input => {
-    const [ intx, index ] = input.split("#")
-    const intxfile = DB + "/transactions/" + intx + "/outputs/" + index + "/output"
-    const val = JSON.parse(fs.readFileSync(intxfile))
-    return {
-      hash: intx,
-      ref: index,
-      addr: val.address,
-      value: Object.keys(val.value).reduce((acc, kpolicy) => {
-        Object.keys(val.value[kpolicy]).map(ktoken => {
-          acc[kpolicy + ":" + ktoken] = val.value[kpolicy][ktoken]
-        })
-        return acc
-      }, {})
-    }
-  })
+  try {
+    const block = JSON.parse(fs.readFileSync(DB + "/transactions/" + req.params.id + "/block"))
+    tx.block = block.id
+    tx.blockHeight = block.height
+  } catch (noSuchFile) {
+    tx.block = "genesis"
+    tx.blockHeight = 0
+  }
+  if (tx.inputs !== undefined) {
+    tx.inputs = tx.inputs.map(input => {
+      const [ intx, index ] = input.split("#")
+      const intxfile = DB + "/transactions/" + intx + "/outputs/" + index + "/output"
+      const val = JSON.parse(fs.readFileSync(intxfile))
+      const obj = {
+        hash: [intx, small_hash(intx)],
+        ref: index,
+        addr: val.address,
+        value: Object.keys(val.value).reduce((acc, kpolicy) => {
+          Object.keys(val.value[kpolicy]).map(ktoken => {
+            acc[kpolicy + ":" + ktoken] = val.value[kpolicy][ktoken]
+          })
+          return acc
+        }, {})
+      }
+      obj.tokenCount = Object.keys(obj.value).length - 1
+      obj.value["ada"] = formatADA(obj.value["ada:lovelace"])
+      return obj
+    })
+  }
   tx.outputs = tx.outputs.map((output, index) => {
     const outtxfile = DB + "/transactions/" + tx.id + "/outputs/" + index + "/output"
     const val = JSON.parse(fs.readFileSync(outtxfile))
-    return {
-      addr: output,
+    const obj = {
+      addr: [output, small_addr(output)],
+      ref: index,
       value: Object.keys(val.value).reduce((acc, kpolicy) => {
         Object.keys(val.value[kpolicy]).map(ktoken => {
           acc[kpolicy + ":" + ktoken] = val.value[kpolicy][ktoken]
         })
         return acc
       }, {}),
-      spentBy: val.spentBy === undefined ? "n/a" : val.spentBy
+      spentBy: val.spentBy === undefined ? "unspent" : small_hash(val.spentBy)
     }
+    obj.tokenCount = Object.keys(obj.value).length - 1
+    obj.value["ada"] = formatADA(obj.value["ada:lovelace"])
+    return obj
   })
+  if (tx.fee !== undefined) {
+    tx.fee = formatADA(tx.fee.lovelace)
+  }
   let transactionTemplate
   if (tx.inputs === undefined) {
     transactionTemplate = fs.readFileSync(TEMPLATE + "/genesis.template").toString()
@@ -86,6 +151,34 @@ app.get("/transaction/:id", async (req, res) => {
     transactionTemplate = fs.readFileSync(TEMPLATE + "/transaction.template").toString()
   }
   let content = await engine.parseAndRender(transactionTemplate, tx)
+  res.setHeader("Content-Type", "text/html")
+  res.send(content)
+})
+
+app.get("/utxo/:tx/:outref", async (req, res) => {
+  const txData = JSON.parse(fs.readFileSync(DB + "/transactions/" + req.params.tx + "/tx"))
+  const utxoData = JSON.parse(fs.readFileSync(DB + "/transactions/" + req.params.tx + "/outputs/" + req.params.outref + "/output"))
+  const utxo = {
+    tx: [req.params.tx, small_hash(req.params.tx)],
+    outref: req.params.outref,
+    addr: [utxoData.address, small_addr(utxoData.address)],
+    value: Object.keys(utxoData.value).reduce((acc, kpolicy) => {
+      Object.keys(utxoData.value[kpolicy]).map(ktoken => {
+        acc[kpolicy + ":" + ktoken] = utxoData.value[kpolicy][ktoken]
+      })
+      return acc
+    }, {}),
+    producedHeight: txData.producedHeight,
+    spentBy: "unspent",
+    spentHeight: utxoData.spentHeight
+  }
+  if (utxoData.spentBy !== undefined) {
+    utxo.spentBy = [utxoData.spentBy, small_hash(utxoData.spentBy)]
+  }
+  utxo.ada = formatADA(utxo.value["ada:lovelace"])
+  delete utxo.value["ada:lovelace"]
+  utxo.hasNativeTokens = Object.keys(utxo.value).length > 0
+  let content = await engine.parseAndRender(fs.readFileSync(TEMPLATE + "/utxo.template").toString(), utxo)
   res.setHeader("Content-Type", "text/html")
   res.send(content)
 })

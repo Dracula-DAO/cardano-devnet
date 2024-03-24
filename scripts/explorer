@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 
+if [ -n "$1" ]; then
+  export CUSTOM_DB_ROOT=$1
+fi
+
 node $DEVNET_ROOT/src/devnet/explorer.mjs
 

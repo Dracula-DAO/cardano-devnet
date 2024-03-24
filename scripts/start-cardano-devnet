@@ -86,7 +86,7 @@ sleep 1
 transfer faucet faucet 1 8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284#0 
 
 if [ -n "$START_INDEXER" ]; then
-  echo "Starting indexer $START_INDEXER"
+  echo "Starting indexer"
   node $DEVNET_ROOT/src/devnet/indexer.mjs > /dev/null 2>&1 &
   INDEXER_PID=$!
 fi
