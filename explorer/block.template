@@ -1,69 +1,89 @@
 <html>
   <head>
-    <style>
-      rect { fill: white; stroke: black; stroke-width: 2 }
-      line { stroke: black; }
-      #current rect { fill: black; }
-      #current text { fill: white; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/css/tailwind.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
   </head>
-  <body>
-    <h1>Cardano Devnet Explorer</h1>
-    <h2>Viewing block: {{ height }}</h2>
-    <div>
-    {% if height >= 1 %}
-    {% if showExtendLeft %}
-    ...
-    {% endif %}
-    <a href="/chain/{{ height | minus: 1}}">
-    <svg width="50" height="50">
-      <g>
-        <rect width="50" height="50" x="0" y="0"/>
-        <text x="15" y="15">{{ height | minus: 1}}</text>
-      </g>
-    </svg></a>
-    <svg width="30" height="50">
-      <defs>
-       <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
-         <path d="M0,0 L0,6 L9,3 z"></path>
-       </marker>
-      </defs>
-      <line x1="0" y1="25" x2="22" y2="25" marker-end="url(#arrow)"/>
-    </svg>
-    {% endif %}
-    <svg id="current" width="50" height="50">
-      <g>
-        <rect width="50" height="50" x="0" y="0"/>
-        <text x="15" y="15">{{ height }}</text>
-      </g>
-    </svg>
-    {% if height < maxHeight %}
-    <svg width="30" height="50">
-      <defs>
-       <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
-         <path d="M0,0 L0,6 L9,3 z"></path>
-       </marker>
-      </defs>
-      <line x1="0" y1="25" x2="22" y2="25" marker-end="url(#arrow)"/>
-    </svg>
-    <a href="/chain/{{ height | plus: 1}}">
-    <svg width="50" height="50">
-      <g>
-        <rect width="50" height="50" x="0" y="0"/>
-        <text x="15" y="15">{{ height | plus: 1}}</text>
-      </g>
-    </svg></a>
-    {% endif %}
-    {% if showExtendRight %}
-    ...
-    {% endif %}
+  <body class="bg-gray-100">
+    <div class="flex justify-center pb-8">
+      <h1 class="text-3xl font-bold">Cardano Devnet Explorer</h1>
     </div>
-    <div>Hash: {{ id }}</div>
-    <div>Slot: {{ slot }}</div>
-    <div>{{ transactions.length }} transactions</div>
-    {% for tx in transactions %}
-      <div><a href="/transaction/{{ tx }}">{{ tx }}</a></div>
-    {% endfor %}
-    <h2>Chain height: <a href="/chain/{{ maxHeight }}">{{ maxHeight }}</a></h2>
+    <div class="flex flex-row flex-wrap justify-center">
+
+      <!-- Genesis Block -->
+      {% if height > 0 %}
+      <a class="btn btn-success" href="/chain/0">Genesis Block</a>
+      <div class="divider divider-horizontal"></div>
+      {% endif %}
+
+      <!-- Prev Block -->
+      {% if height > 1 %}
+      {% if showExtendLeft %}
+      {% endif %}
+      <a class="flex-initial btn btn-info" href="/chain/{{ height | minus: 1}}">Prev Block: {{ height | minus: 1 }}</a>
+      <div class="divider divider-horizontal"></div>
+      {% endif %}
+
+      <!-- Current Block -->
+      <div class="btn btn-neutral no-animation">Current Block: {{ height }}</div>
+
+      <!-- Next Block -->
+      <div class="divider divider-horizontal"></div>
+      {% if height < maxHeight %}
+      <a class="flex-initial btn btn-info" href="/chain/{{ height | plus: 1}}">Next Block: {{ height | plus: 1 }}</a>
+      {% endif %}
+
+      <!-- Max Block -->
+      {% if showExtendRight %}
+      <div class="divider divider-horizontal"></div>
+      <a class="btn btn-success" href="/chain/{{ maxHeight }}">Block {{ maxHeight }}</a>
+      {% endif %}
+
+    </div>
+    <div class="flex justify-center pt-4 ml-[50px] mr-[50px]">
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body items-center text-center">
+          <div class="card-title">Block {{ height }} Data</div>
+          <table>
+            <tbody>
+              <tr>
+                <td>Full Hash</td>
+                <td>{{ id }}</td>
+              </tr>
+              <tr>
+                <td>Height</td>
+                <td>{{ height }}</td>
+              </tr>
+              <tr>
+                <td>Time Slot</td>
+                <td>{{ slot }}</td>
+              </tr>
+              <tr>
+                <td>Transactions</td>
+                <td>
+                  <div class="flex flex-row flex-wrap">
+                    {% if transactions.length > 0 %}
+                      {% for tx in transactions %}
+                        <div class="card bg-yellow-100 shadow-xl mr-[10px] mb-[10px]">
+                          <a class="card-body" href="/transaction/{{ tx.hash[0] }}">
+                            <h2 class="card-title">Tx {{ tx.hash[1] }}</h2>
+                            <div>
+                              {{ tx.inputCount }} input{% if tx.inputCount != 1 %}s{% endif %}
+                            </div>
+                            <div>{{ tx.outputCount }} output{% if tx.outputCount != 1 %}s{% endif %}</div>
+                          </a>
+                        </div>
+                      {% endfor %}
+                    {% else %}
+                      None
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
