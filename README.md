@@ -4,7 +4,7 @@ This repository enables anyone to create a completely local cardano development 
 
 It is recommended to use this with [cardano-cli-guru](https://github.com/iburzynski/cardano-cli-guru), a submodule under the [jambhala](https://github.com/iburzynski/jambhala) framework.
 
-The includes several additional features in addition to a locally running node:
+The project includes several additional features in addition to a locally running node:
 
 * Live monitor - a terminal-based monitor script that shows high-level transaction information for confirmed transactions, as well as realtime pending transactions in the mempool.
 
