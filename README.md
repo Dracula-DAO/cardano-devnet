@@ -10,7 +10,35 @@ The project includes several additional features in addition to a locally runnin
 
 <img src="./docs/images/devnet_monitor.png" width="700px"/>
 
-* Lightweight indexer - a filesystem indexer built to store chain history in human readable (json) format is a database directory using symlinks to optimize storage. This is perfect for development because you can start the devnet, run some tests, then stop the devnet and debug using the indexed database and built-in explorer.
+* Lightweight indexer - a filesystem indexer built to store chain history in human readable (json) format is a database directory using symlinks to optimize storage. This is perfect for development because you can start the devnet, run some tests, then stop the devnet and debug using the indexed database and built-in explorer.  This also allows you to peruse the database using standard filesystem cli tools:
+
+```
+$ cat db/transactions/41a818da0864ba9f4552af75c943b564870db652c99ea1e31d90e2745edb9b57/tx
+{
+  "id": "41a818da0864ba9f4552af75c943b564870db652c99ea1e31d90e2745edb9b57",
+  "spends": "inputs",
+  "fee": {
+    "lovelace": 358151
+  },
+  "validityInterval": {},
+  "signatories": [
+    {
+      "key": "330b6c126205329daef6a72d5381a2b55a8b002c1766487657f565c1e21f6ee2",
+      "signature": "e5d63aa4f6941b242a4b104090cb41bb35cf6e8fd8f268e6b8e5bc85ce7a0e92c4723cb751e3cac4a8ded735411d89f3e996ac4e0774cfb062bf7844ece34003"
+    }
+  ],
+  "producedHeight": 18,
+  "inputs": [
+    "25e01503dc6b053ef9863afb178b8232e14000b90745585e1464bdee238a71de#2",
+    "517dbea6dd499d76506e66dae69ca05d4f1bf3d73a700c9e683a8939d11de5f0#0"
+  ],
+  "outputs": [
+    "addr_test1vq44zlg5mj8cm5txeg4qgk2hn8k4j02uaxlf6u8p0dcmassfv4yfj",
+    "addr_test1vpkqrr50xe8n473s6nz34xt76tx5h5uxgvfmuf75uk2k4lg4rpfa6",
+    "addr_test1vpkqrr50xe8n473s6nz34xt76tx5h5uxgvfmuf75uk2k4lg4rpfa6"
+  ]
+}
+```
 
 * Web-based chain explorer - view blocks, transactions, utxos and address data from a web browser. Optionally specify the directory to use for the db - you can save previous chain states by moving the db directory somewhere and use this saved chain snapshot with the explorer anytime in the future.
 
