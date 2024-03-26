@@ -62,6 +62,7 @@ class DBWriter {
       fs.mkdirSync(this.db + "/chain")
       fs.mkdirSync(this.db + "/transactions")
       fs.mkdirSync(this.db + "/addresses")
+      fs.mkdirSync(this.db + "/tokens")
     } catch (alreadyExists) {}
 
     // Populate initial faucet utxo (genesis), hardcoded because the hash will
@@ -91,6 +92,10 @@ class DBWriter {
         lovelace: GENESIS_FAUCET_LOVELACE
       }
     }, null, 2))
+    fs.mkdirSync(this.db + "/tokens/ada/lovelace", { recursive: true })
+    const adaLedger = {}
+    adaLedger[ADDR_FAUCET] = GENESIS_FAUCET_LOVELACE
+    fs.writeFileSync(this.db + "/tokens/ada/lovelace/ledger", JSON.stringify(adaLedger, null, 2))
     relative_link(genesis_tx_path + "/outputs/0", genesis_address_path + "/" + GENESIS_FAUCET_HASH + "#0")
   }
 
@@ -137,7 +142,6 @@ class DBWriter {
       fs.writeFileSync(this.db + "/transactions/" + tx.id + "/outputs/" + index + "/output", JSON.stringify(output, null, 2))
       try {
         fs.mkdirSync(this.db + "/addresses/" + output.address)
-        fs.writeFileSync(this.db + "/addresses/ledger", "{}")
       } catch (alreadyExists) {}
       this.produce(output)
       relative_link(this.db + "/transactions/" + tx.id + "/outputs/" + index + "/output", 
@@ -146,17 +150,31 @@ class DBWriter {
   }
 
   produce(utxo) {
-    let balances
+    let balances = {}
     try {
       balances = JSON.parse(fs.readFileSync(this.db + "/addresses/" + utxo.address + "/ledger"))
-    } catch (fileNotFound) {
-      balances = {}
-    }
+    } catch (fileNotFound) {}
     Object.keys(utxo.value).forEach(pid => {
+      if (!fs.existsSync(this.db + "/tokens/" + pid)) {
+        fs.mkdirSync(this.db + "/tokens/" + pid)
+      }
       Object.keys(utxo.value[pid]).forEach(tn => {
+        if (!fs.existsSync(this.db + "/tokens/" + pid)) {
+          fs.mkdirSync(this.db + "/tokens/" + pid + "/" + tn)
+        }
+        let tokenLedger = {}
+        try {
+          tokenLedger = JSON.parse(fs.readFileSync(this.db + "/tokens/" + pid + "/" + tn + "/ledger"))
+        } catch {}
         if (balances[pid] === undefined) balances[pid] = {}
         if (balances[pid][tn] === undefined) balances[pid][tn] = 0
+        if (tokenLedger[utxo.address] === undefined) tokenLedger[utxo.address] = 0
         balances[pid][tn] += utxo.value[pid][tn]
+        tokenLedger[utxo.address] += utxo.value[pid][tn]
+        if (!fs.existsSync(this.db + "/tokens/" + pid + "/" + tn)) {
+          fs.mkdirSync(this.db + "/tokens/" + pid + "/" + tn)
+        }
+        fs.writeFileSync(this.db + "/tokens/" + pid + "/" + tn + "/ledger", JSON.stringify(tokenLedger, null, 2))
       })
     })
     fs.writeFileSync(this.db + "/addresses/" + utxo.address + "/ledger", JSON.stringify(balances, null, 2))
@@ -166,9 +184,12 @@ class DBWriter {
     const balances = JSON.parse(fs.readFileSync(this.db + "/addresses/" + utxo.address + "/ledger"))
     Object.keys(utxo.value).forEach(pid => {
       Object.keys(utxo.value[pid]).forEach(tn => {
+        const tokenLedger = JSON.parse(fs.readFileSync(this.db + "/tokens/" + pid + "/" + tn + "/ledger"))
         if (balances[pid] === undefined) balances[pid] = {}
         if (balances[pid][tn] === undefined) balances[pid][tn] = 0
         balances[pid][tn] -= utxo.value[pid][tn]
+        tokenLedger[utxo.address] -= utxo.value[pid][tn]
+        fs.writeFileSync(this.db + "/tokens/" + pid + "/" + tn + "/ledger", JSON.stringify(tokenLedger, null, 2))
       })
     })
     fs.writeFileSync(this.db + "/addresses/" + utxo.address + "/ledger", JSON.stringify(balances, null, 2))

@@ -64,7 +64,7 @@
                 </td>
               <tr>
                 <td>&#x20B3; Value</td>
-                <td>{{ ada }}</td>
+                <td><a href="/token/ada:lovelace">{{ ada }}</a></td>
               </tr>
               {% if hasNativeTokens %}
                 <tr>
@@ -80,7 +80,7 @@
                       <tbody>
                         {% for v in value %}
                           <tr>
-                            <td>{{ v[0] }}</td>
+                            <td><a href="/token/{{ v[0] }}">{{ v[0] }}</a></td>
                             <td>{{ v[1] }}</td>
                           </tr>
                         {% endfor %}

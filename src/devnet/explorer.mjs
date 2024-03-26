@@ -183,6 +183,39 @@ app.get("/utxo/:tx/:outref", async (req, res) => {
   res.send(content)
 })
 
+app.get("/token/:unit", async (req, res) => {
+  const latest = JSON.parse(fs.readFileSync(DB + "/latest"))
+  const [pid, tn] = req.params.unit.split(":")
+  const ledger = JSON.parse(fs.readFileSync(DB + "/tokens/" + pid + "/" + tn + "/ledger"))
+  let content = await engine.parseAndRender(fs.readFileSync(TEMPLATE + "/token.template").toString(), { 
+    height: latest.height,
+    policyId: pid,
+    tokenName: tn,
+    ledger: ledger 
+  })
+  res.setHeader("Content-Type", "text/html")
+  res.send(content)  
+})
+
+app.get("/address/:addr", async (req, res) => {
+  const latest = JSON.parse(fs.readFileSync(DB + "/latest"))
+  const ledger = JSON.parse(fs.readFileSync(DB + "/addresses/" + req.params.addr + "/ledger"))
+  const flattenedLedger = Object.keys(ledger).reduce((acc, pid) => {
+    Object.keys(ledger[pid]).reduce((acc, tn) => {
+      acc[pid + ":" + tn] = ledger[pid][tn]
+    }, acc)
+    return acc
+  }, {})
+  let content = await engine.parseAndRender(fs.readFileSync(TEMPLATE + "/address.template").toString(), { 
+    height: latest.height,
+    address: req.params.addr,
+    ledger: flattenedLedger
+  })
+  res.setHeader("Content-Type", "text/html")
+  res.send(content)  
+
+})
+
 app.listen(PORT, () => {
     console.log(`Explorer started on port ${PORT}`)
 })
