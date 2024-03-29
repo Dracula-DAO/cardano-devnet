@@ -162,6 +162,7 @@ app.get("/utxo/:tx/:outref", async (req, res) => {
     tx: [req.params.tx, small_hash(req.params.tx)],
     outref: req.params.outref,
     addr: [utxoData.address, small_addr(utxoData.address)],
+    datum: utxoData.datum,
     value: Object.keys(utxoData.value).reduce((acc, kpolicy) => {
       Object.keys(utxoData.value[kpolicy]).map(ktoken => {
         acc[kpolicy + ":" + ktoken] = utxoData.value[kpolicy][ktoken]

@@ -89,6 +89,12 @@
                   </td>
                 </tr>
               {% endif %}
+              {% if datum != undefined %}
+                <tr>
+                  <td>Datum</td>
+                  <td>{{ datum }}</td>
+                </tr>
+              {% endif %}
             </tbody>
           </table>
         </div>
