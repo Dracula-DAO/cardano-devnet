@@ -595,7 +595,7 @@ class LucidProviderBackend {
     return {}
   }
 
-  async getJambhalaAddr(params) {
+  async getSymbolicAddr(params) {
     if (process.env.ADDR_PATH !== undefined) {
       const addressFile = process.env.ADDR_PATH + "/" + params.name + ".addr"
       const addr = fs.readFileSync(addressFile).toString()
@@ -606,7 +606,7 @@ class LucidProviderBackend {
     }
   }
 
-  async getJambhalaPrivKey(params) {
+  async getSymbolicPrivKey(params) {
     // This is intended only for devnet testing, obviously not a secure method
     if (process.env.KEYS_PATH !== undefined) {
       const keysFile = process.env.KEYS_PATH + "/" + params.name + ".skey"
@@ -698,6 +698,20 @@ class LucidProviderBackend {
     const res = await this.ogmios.submitTx(tx.cbor)
     log.info("Submitting transaction: " + tx.cbor.length + " bytes")
     return res.transaction.id
+  }
+
+  async getSymbolicAddress(params) {
+    const name = params.name
+    const bech32Addr = fs.readFileSync(process.env.ADDR_PATH + "/" + name + ".addr").toString()
+    return bech32Addr
+  }
+
+  async getSymbolicPrivKey(params) {
+    const name = params.name
+    const cbor = JSON.parse(fs.readFileSync(process.env.KEYS_PATH + "/" + name + ".skey").toString())
+    const decoded = decodeCbor(Buffer.from(cbor.cborHex, 'hex'))
+    const privKey = C.PrivateKey.from_normal_bytes(decoded).to_bech32()
+    return privKey
   }
 
   providerError(sock, id, msg) {
