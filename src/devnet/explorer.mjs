@@ -7,7 +7,7 @@ const engine = new Liquid()
 const PORT=3000
 const TEMPLATE=process.env.DEVNET_ROOT + "/explorer"
 
-let DB=process.env.DEVNET_ROOT + "/db"
+let DB=process.env.DEVNET_ROOT + "/runtime/index"
 if (process.env.CUSTOM_DB_ROOT !== undefined) {
   DB = process.env.CUSTOM_DB_ROOT
 }
