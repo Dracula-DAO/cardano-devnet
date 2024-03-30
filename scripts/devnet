@@ -5,7 +5,7 @@
 # mempool monitoring.
 # Hydra repo: https://github.com/input-output-hk/hydra
 
-# Prepare a "target" directory holding credentials, a dummy topology and
+# Prepare a "chain" directory holding credentials, a dummy topology and
 # "up-to-date" genesis files. If the directory exists, it is wiped out.
 set -em
 
@@ -15,14 +15,15 @@ if [[ ! $1 == ?(-)+([0-9]) ]]; then
     exit -1
 fi
 
-BASEDIR=$DEVNET_ROOT
-TARGETDIR="$BASEDIR/target"
-CARDANO_NODE_SOCKET_PATH="$TARGETDIR/node.socket"
+BASEDIR="$DEVNET_ROOT"
+RUNTIMEDIR="$BASEDIR/runtime"
+TARGETDIR="$RUNTIMEDIR/chain"
 
 [ -d "$TARGETDIR" ] && { echo "Cleaning up directory $TARGETDIR" ; sudo rm -r $TARGETDIR ; }
+mkdir -p "$TARGETDIR"
 
-cp -af "$BASEDIR/config/genesis/" "$TARGETDIR"
-cp -af "$BASEDIR/config/protocol-parameters.json" "$TARGETDIR"
+cp "$BASEDIR"/config/genesis/* "$TARGETDIR"
+cp "$BASEDIR"/config/protocol-parameters.json "$TARGETDIR"
 
 # Copy faucet keys, address to the CARDANO_CLI_GURU assets directory
 if [[ -v CARDANO_CLI_GURU ]]; then

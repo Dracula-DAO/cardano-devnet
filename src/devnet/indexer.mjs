@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { OgmiosConnection, OgmiosStateMachine } from './components/Ogmios.mjs'
 
-const DB_ROOT=process.env.DEVNET_ROOT + "/db"
+const DB_ROOT=process.env.DEVNET_ROOT + "/runtime/index"
 const OGMIOS_PORT = 1337
 
 // Genesis constants - faucet initial utxo to seed all other tx's
@@ -57,13 +57,13 @@ class DBWriter {
       fs.rmSync(this.db, {
         recursive: true
       })
-      fs.mkdirSync(this.db)
-      fs.mkdirSync(this.db + "/blocks")
-      fs.mkdirSync(this.db + "/chain")
-      fs.mkdirSync(this.db + "/transactions")
-      fs.mkdirSync(this.db + "/addresses")
-      fs.mkdirSync(this.db + "/tokens")
     } catch (alreadyExists) {}
+    fs.mkdirSync(this.db)
+    fs.mkdirSync(this.db + "/blocks")
+    fs.mkdirSync(this.db + "/chain")
+    fs.mkdirSync(this.db + "/transactions")
+    fs.mkdirSync(this.db + "/addresses")
+    fs.mkdirSync(this.db + "/tokens")
 
     // Populate initial faucet utxo (genesis), hardcoded because the hash will
     // never change
