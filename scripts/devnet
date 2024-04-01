@@ -45,16 +45,16 @@ sed -i "s/\"activeSlotsCoeff\": .*/\"activeSlotsCoeff\": $COEFF,/" "$TARGETDIR/g
 
 # Recalculate genesis hashes
 BYRON_HASH=$(cardano-cli byron genesis print-genesis-hash --genesis-json $TARGETDIR/genesis-byron.json)
-echo "Byron hash: $BYRON_HASH"
+echo "Computed Byron hash: $BYRON_HASH"
 sed -i "s/\"ByronGenesisHash\": .*/\"ByronGenesisHash\": \"$BYRON_HASH\",/" "$TARGETDIR/cardano-node.json"
 SHELLEY_HASH=$(cardano-cli genesis hash --genesis $TARGETDIR/genesis-shelley.json)
-echo "Shelley hash: $SHELLEY_HASH"
+echo "Computed Shelley hash: $SHELLEY_HASH"
 sed -i "s/\"ShelleyGenesisHash\": .*/\"ShelleyGenesisHash\": \"$SHELLEY_HASH\",/" "$TARGETDIR/cardano-node.json"
 ALONZO_HASH=$(cardano-cli genesis hash --genesis $TARGETDIR/genesis-alonzo.json)
-echo "Alonzo hash: $ALONZO_HASH"
+echo "Computed Alonzo hash: $ALONZO_HASH"
 sed -i "s/\"AlonzoGenesisHash\": .*/\"AlonzoGenesisHash\": \"$ALONZO_HASH\",/" "$TARGETDIR/cardano-node.json"
 CONWAY_HASH=$(cardano-cli genesis hash --genesis $TARGETDIR/genesis-conway.json)
-echo "Conway hash: $CONWAY_HASH"
+echo "Computed Conway hash: $CONWAY_HASH"
 sed -i "s/\"ConwayGenesisHash\": .*/\"ConwayGenesisHash\": \"$CONWAY_HASH\",/" "$TARGETDIR/cardano-node.json"
 
 find $TARGETDIR -type f -exec chmod 0400 {} \;
