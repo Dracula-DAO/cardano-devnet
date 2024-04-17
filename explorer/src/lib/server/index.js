@@ -124,6 +124,7 @@ export function loadUtxo(hash, ref) {
     ref: ref,
     addr: [utxoData.address, small_addr(utxoData.address)],
     datum: utxoData.datum,
+    redeemer: utxoData.redeemer,
     value: Object.keys(utxoData.value).reduce((acc, kpolicy) => {
       Object.keys(utxoData.value[kpolicy]).map(ktoken => {
         let logo

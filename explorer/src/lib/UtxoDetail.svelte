@@ -103,5 +103,14 @@
         <td>{ utxo.datum }</td>
       </tr>
     {/if}
+    {#if utxo.redeemer !== undefined }
+      <tr>
+        <td>Redeemer</td>
+        <td class="flex flex-row gap-4">
+          <div>{ utxo.redeemer.data }</div>
+          <div>({ utxo.redeemer.type })</div>
+        </td>
+      </tr>
+    {/if}
   </tbody>
 </table>
