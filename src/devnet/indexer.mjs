@@ -29,8 +29,8 @@ class DBTransformer {
   }
 
   transformTransaction(ogmiosBlock, ogmiosTransaction) {
-    //console.log(JSON.stringify(ogmiosTransaction, null, 2))
-    return {
+    console.log(JSON.stringify(ogmiosTransaction, null, 2))
+    const obj = {
       id: ogmiosTransaction.id,
       spends: ogmiosTransaction.spends,
       fee: ogmiosTransaction.fee,
@@ -42,8 +42,17 @@ class DBTransformer {
       }),
       outputs: ogmiosTransaction.outputs.map(o => {
         return o.address
+      }),
+    }
+    if (ogmiosTransaction.scripts !== undefined) {
+      obj.scripts = Object.keys(ogmiosTransaction.scripts).map(cred => {
+        return {
+          cred: cred,
+          cbor: ogmiosTransaction.scripts[cred].cbor
+        }
       })
     }
+    return obj
   }
 
 }
@@ -130,6 +139,17 @@ class DBWriter {
     fs.mkdirSync(this.db + "/transactions/" + tx.id + "/outputs")
     fs.writeFileSync(this.db + "/transactions/" + tx.id + "/tx", formattedTransaction)
     relative_link(this.db + "/blocks/" + block.id + "/block", this.db + "/transactions/" + tx.id + "/block")
+    let redeemers = {}
+    if (tx.redeemers !== undefined) {
+      redeemers = Object.keys(tx.redeemers).reduce((acc, r) => {
+        const [type, indx] = r.split(":")
+        acc[indx] = {
+          type: type,
+          data: tx.redeemers[r].redeemer
+        }
+        return acc
+      }, {})
+    }
     tx.inputs.forEach((input, index) => {
       fs.mkdirSync(this.db + "/transactions/" + tx.id + "/inputs/" + index)
       relative_link(this.db + "/transactions/" + input.transaction.id + "/outputs/" + input.index + "/output", this.db + "/transactions/" + tx.id + "/inputs/" + index + "/input")
@@ -138,6 +158,25 @@ class DBWriter {
       const inputUtxo = JSON.parse(fs.readFileSync(inputUtxoFile))
       this.consume(inputUtxo)
       fs.unlinkSync(this.db + "/addresses/" + inputUtxo.address + "/" + input.transaction.id + "#" + input.index)
+      if (redeemers[index] !== undefined) {
+        inputUtxo.redeemer = redeemers[index]
+      }
+
+      // Add to address history
+      let history
+      try {
+        history = JSON.parse(fs.readFileSync(this.db + "/addresses/" + inputUtxo.address + "/history"))
+      } catch (fileNotFound) {
+        history = []
+      }
+      if (history.length === 0 || history[history.length-1].id !== tx.id) {
+        history.push({
+          block: block.height,
+          id: tx.id
+        })
+      }
+      fs.writeFileSync(this.db + "/addresses/" + inputUtxo.address + "/history", JSON.stringify(history, null, 2))
+
       inputUtxo.spentBy = tx.id
       inputUtxo.spentHeight = block.height
       fs.writeFileSync(inputUtxoFile, JSON.stringify(inputUtxo, null, 2))
