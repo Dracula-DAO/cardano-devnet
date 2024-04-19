@@ -10,6 +10,16 @@ function small_addr(addr) {
   return addr.slice(0, 15) + ".." + addr.slice(-6)
 }
 
+function addr_alias(addr) {
+  const aliasFile = DB + "/addresses/" + addr + "/alias"
+  let alias
+  try {
+    alias = fs.readFileSync(aliasFile).toString().trim()
+  } catch (notFound) {
+  }
+  return alias
+}
+
 function formatADA(lovelace) {
   let ada = ("" + lovelace).slice(0,-6)
   if (ada === "") ada = "0"
@@ -52,7 +62,9 @@ export function loadLatest() {
       }
       acc[small_hash(kpolicy) + ":" + ktoken] = {
         logo: logo,
-        amount: amount
+        amount: amount,
+        policy: kpolicy,
+        token: ktoken
       }
     })
     return acc
@@ -155,6 +167,66 @@ export function loadUtxo(hash, ref) {
   return utxo
 }
 
+export function loadAddress(addr) {
+  const alias = addr_alias(addr)
+  const ledgerValues = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/ledger"))
+  const ledger = Object.keys(ledgerValues).reduce((acc, kpolicy) => {
+    Object.keys(ledgerValues[kpolicy]).map(ktoken => {
+      let logo
+      if (kpolicy === "ada" && ktoken == "lovelace") {
+        logo = "cardano-ada-logo.svg"
+      } else {
+        logo = "svg/bolt.svg"
+      }
+      acc[kpolicy + ":" + ktoken] = {
+        policy: [kpolicy, small_hash(kpolicy)],
+        token: ktoken,
+        logo: logo,
+        amount: ledgerValues[kpolicy][ktoken]
+      }
+    })
+    return acc
+  }, {})
+  const history = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/history"))
+  const obj = {
+    address: [addr, small_addr(addr)],
+    alias: alias,
+    ledger: ledger,
+    history: history.map(h => {
+      return {
+        block: h.block,
+        id: [h.id, small_hash(h.id)]
+      }
+    })
+  }
+  obj.ada = formatADA(obj.ledger["ada:lovelace"].amount)
+  delete obj.ledger["ada:lovelace"]
+  obj.hasNativeTokens = Object.keys(obj.ledger).length > 0
+  return obj
+}
+
+export function loadToken(policy, token) {
+  const tokData = JSON.parse(fs.readFileSync(DB + "/tokens/" + policy + "/" + token + "/ledger"))
+  let count = 0
+  const pagedData = Object.keys(tokData).reduce((acc, addr) => {
+    if (count < 10) {
+      const alias = addr_alias(addr)
+      acc.push({
+        address: [addr, small_addr(addr)],
+        amount: tokData[addr],
+        alias: alias
+      })
+      count++
+    }
+    return acc
+  }, [])
+  return {
+    policy: policy,
+    token: token,
+    ledger: pagedData
+  }
+}
+
 const testPath = async path => {
   return new Promise(res => {
     try {
@@ -181,6 +253,10 @@ export async function search(pattern) {
     if (await testPath(DB + "/transactions/" + pattern)) {
       console.log("found transaction")
       return "/transaction/" + pattern
+    }
+    if (await testPath(DB + "/addresses/" + pattern)) {
+      console.log("found address")
+      return "/address/" + pattern
     }
   }
   throw new Error("Not found: " + pattern)

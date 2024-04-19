@@ -15,7 +15,7 @@
     <tr>
       <td>Address</td>
       <td>
-        <button class="btn color-address">Addr {utxo.addr[1]}</button>
+        <button class="btn color-address shadow-xl"><a href="/address/{utxo.addr[0]}">{utxo.addr[1]}</a></button>
       </td>
     </tr>
     <tr>
@@ -34,21 +34,21 @@
             <tr>
               <td>
                 <div class="flex justify-center">
-                  <a class="flex btn color-transaction" href="/transaction/{utxo.hash[0]}">
+                  <a class="flex btn color-transaction shadow-xl mr-2" href="/transaction/{utxo.hash[0]}">
                     <div>Tx {utxo.hash[1]}</div>
                     <div>#{utxo.ref}</div>
                   </a>
-                  <a class="btn color-block" href="/chain/{utxo.producedHeight}">Block {utxo.producedHeight}</a>
+                  <a class="btn color-block shadow-xl" href="/chain/{utxo.producedHeight}">Block {utxo.producedHeight}</a>
                 </div>
               </td>
               {#if utxo.spentBy !== "unspent"}
                 <td>
                   <div class="flex justify-center">
-                    <a class="flex btn color-transaction" href="/transaction/{utxo.spentBy[0]}">
+                    <a class="flex btn color-transaction shadow-xl mr-2" href="/transaction/{utxo.spentBy[0]}">
                       <div>Tx {utxo.spentBy[1]}</div>
                       <div>#{utxo.ref}</div>
                     </a>
-                    <a class="btn color-block" href="/chain/{utxo.spentHeight}">Block {utxo.spentHeight}</a>
+                    <a class="btn color-block shadow-xl" href="/chain/{utxo.spentHeight}">Block {utxo.spentHeight}</a>
                   </div>
                 </td>
               {/if}
@@ -60,7 +60,7 @@
     <tr>
       <td>Value</td>
       <td>
-        <table class="w-full">
+        <table class="w-full border-separate border-spacing-4">
           <thead>
             <tr>
               <th class="w-3/4">Policy ID : Token Name</th>
@@ -70,11 +70,9 @@
           <tbody>
             <tr>
               <td>
-                <a class="flex btn gap-2" href="/token/ada:lovelace">
+                <a class="flex btn color-token shadow-xl" href="/token/ada/lovelace">
                   <img class="token" src="/cardano-ada-logo.svg" alt="ada"/>
-                  <div>ada</div>
-                  <div>:</div>
-                  <div>lovelace</div>
+                  <div>ada : lovelace</div>
                 </a>
               <td class="text-center">&#x20B3; {utxo.ada}</td>
             </tr>
@@ -82,11 +80,9 @@
               {#each Object.entries(utxo.value) as [unit, data] }
                 <tr>
                   <td>
-                    <a class="flex btn gap-2" href="/token/{ unit }">
+                    <a class="flex btn color-token shadow-xl" href="/token/{ data.policy[0] }/{ data.token }">
                       <img class="token" src="/{data.logo}" alt="{data.kpolicy}"/>
-                      <div>{data.policy[1]}</div>
-                      <div>:</div>
-                      <div>{data.token}</div>
+                      <div>{data.policy[1]} : {data.token}</div>
                     </a>
                   </td>
                   <td class="text-center">{ data.amount }</td>
