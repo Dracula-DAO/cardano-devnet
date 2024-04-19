@@ -1,4 +1,5 @@
 <div class="flex flex-col">
+  <div class="self-center font-bold pb-4">Color Codes</div>
   <div class="card color-block shadow-xl p-4 w-[200px]">
     <div class="card-title justify-center">Block</div>
   </div>
@@ -13,5 +14,8 @@
   </div>
   <div class="card color-address shadow-xl mt-4 p-8 w-[200px]">
     <div class="card-title justify-center">Address</div>
+  </div>
+  <div class="card color-token shadow-xl mt-4 p-8 w-[200px]">
+    <div class="card-title justify-center">Token</div>
   </div>
 </div>

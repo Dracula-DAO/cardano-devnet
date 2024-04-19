@@ -3,10 +3,10 @@
 </script>
 <div class="flex justify-center mb-8">
   {#if block.height > 0}
-  <a class="btn mr-2" href="/chain/{block.height-1}">&lt;&lt;&lt; Prev Block {block.height-1}</a>
+  <a class="btn mr-2 color-block shadow-xl" href="/chain/{block.height-1}">&lt;&lt;&lt; Prev Block {block.height-1}</a>
   {/if}
   {#if block.height < block.latest}
-  <a class="btn" href="/chain/{block.height+1}">Next Block {block.height+1} &gt;&gt;&gt;</a>
+  <a class="btn color-block shadow-xl" href="/chain/{block.height+1}">Next Block {block.height+1} &gt;&gt;&gt;</a>
   {/if}
 </div>
 <div class="card-title justify-center mb-5">Block {block.height}</div>
@@ -30,7 +30,7 @@
         {#if block.txs.length > 0}
           <div class="flex flex-row flex-wrap">
             {#each block.txs as tx}
-              <a class="flex flex-col btn color-transaction" href="/transaction/{tx.hash[0]}">
+              <a class="flex flex-col btn color-transaction shadow-xl" href="/transaction/{tx.hash[0]}">
                 <div>Tx {tx.hash[1]}</div>
                 <div>{tx.inputCount} input{#if tx.inputCount != 1}s{/if} -&gt; {tx.outputCount} output{#if tx.outputCount != 1}s{/if}</div>
               </a>    
