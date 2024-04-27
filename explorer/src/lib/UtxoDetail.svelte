@@ -1,7 +1,7 @@
 <script>
   export let utxo
 </script>
-<table class="border-separate border-spacing-4">
+<table class="card border-separate border-spacing-4 shadow-lg">
   <tbody>
     <tr>
       <td>ID</td>
@@ -13,15 +13,22 @@
       </td>
     </tr>
     <tr>
-      <td>Address</td>
+      <td>UTxO Address</td>
       <td>
-        <button class="btn color-address shadow-xl"><a href="/address/{utxo.addr[0]}">{utxo.addr[1]}</a></button>
+        <button class="flex flex-col btn color-address shadow-xl">
+          <a href="/address/{utxo.addr[0]}">
+            <div>{utxo.addr[1]}</div>
+            {#if utxo.alias !== undefined}
+              <div class=pt-2>{utxo.alias}</div>
+            {/if}
+          </a>
+        </button>
       </td>
     </tr>
     <tr>
       <td>Lifecycle</td>
       <td>
-        <table class="w-full">
+        <table class="table-header-group border-separaate border-spacing-4">
           <thead>
             <tr>
               <th>Producing Tx</th>
@@ -33,8 +40,8 @@
           <tbody>
             <tr>
               <td>
-                <div class="flex justify-center">
-                  <a class="flex btn color-transaction shadow-xl mr-2" href="/transaction/{utxo.hash[0]}">
+                <div class="flex justify-center p-4">
+                  <a class="flex btn color-transaction shadow-xl mr-1" href="/transaction/{utxo.hash[0]}">
                     <div>Tx {utxo.hash[1]}</div>
                     <div>#{utxo.ref}</div>
                   </a>
@@ -43,8 +50,8 @@
               </td>
               {#if utxo.spentBy !== "unspent"}
                 <td>
-                  <div class="flex justify-center">
-                    <a class="flex btn color-transaction shadow-xl mr-2" href="/transaction/{utxo.spentBy[0]}">
+                  <div class="flex justify-center p-4">
+                    <a class="flex btn color-transaction shadow-xl mr-1" href="/transaction/{utxo.spentBy[0]}">
                       <div>Tx {utxo.spentBy[1]}</div>
                       <div>#{utxo.ref}</div>
                     </a>
@@ -60,10 +67,10 @@
     <tr>
       <td>Value</td>
       <td>
-        <table class="w-full border-separate border-spacing-4">
+        <table class="table-header-group border-separate border-spacing-4">
           <thead>
             <tr>
-              <th class="w-3/4">Policy ID : Token Name</th>
+              <th>Policy ID : Token Name</th>
               <th>Amount</th>
             </tr>
           </thead>

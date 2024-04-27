@@ -1,5 +1,5 @@
 <div class="flex flex-col">
-  <div class="self-center font-bold pb-4">Color Codes</div>
+  <div class="self-center font-bold pb-4">Color Code Legend</div>
   <div class="card color-block shadow-xl p-4 w-[200px]">
     <div class="card-title justify-center">Block</div>
   </div>
