@@ -116,7 +116,7 @@ fi
 
 if [ -n "$START_EXPLORER" ]; then
   echo "Starting explorer"
-  node $DEVNET_ROOT/src/devnet/explorer.mjs &
+  (cd explorer && npm run dev > /dev/null 2>&1) &
   EXPLORER_PID=$!
 fi
 

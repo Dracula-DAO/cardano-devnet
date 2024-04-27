@@ -49,6 +49,7 @@ export function loadBlock(path) {
 export function loadLatest() {
   const latest = JSON.parse(fs.readFileSync(DB + "/latest"))
   const tokens = JSON.parse(fs.readFileSync(DB + "/tokens/ledger"))
+  //console.log("Loading latest: " + latest.height)
   latest.tokens = Object.keys(tokens).reduce((acc, kpolicy) => {
     Object.keys(tokens[kpolicy]).map(ktoken => {
       let logo
@@ -72,6 +73,16 @@ export function loadLatest() {
   return latest
 }
 
+export async function waitBlock() {
+  return await new Promise(resolve => {
+    const listener = () => {
+      resolve(loadLatest())
+      fs.unwatchFile(DB + "/latest", listener)
+    }
+    fs.watchFile(DB + "/latest", { interval: 507 }, listener)
+  })
+}
+
 export function loadTransaction(hash) {
   const tx = JSON.parse(fs.readFileSync(DB + "/transactions/" + hash + "/tx"))
   try {
@@ -92,6 +103,7 @@ export function loadTransaction(hash) {
         hash: [intx, small_hash(intx)],
         ref: index,
         addr: [val.address, small_addr(val.address)],
+        alias: addr_alias(val.address),
         value: Object.keys(val.value).reduce((acc, kpolicy) => {
           Object.keys(val.value[kpolicy]).map(ktoken => {
             acc[kpolicy + ":" + ktoken] = val.value[kpolicy][ktoken]
@@ -109,6 +121,7 @@ export function loadTransaction(hash) {
     const val = JSON.parse(fs.readFileSync(outtxfile))
     const obj = {
       addr: [output, small_addr(output)],
+      alias: addr_alias(output),
       ref: index,
       value: Object.keys(val.value).reduce((acc, kpolicy) => {
         Object.keys(val.value[kpolicy]).map(ktoken => {
@@ -135,6 +148,7 @@ export function loadUtxo(hash, ref) {
     hash: [hash, small_hash(hash)],
     ref: ref,
     addr: [utxoData.address, small_addr(utxoData.address)],
+    alias: addr_alias(utxoData.address),
     datum: utxoData.datum,
     redeemer: utxoData.redeemer,
     value: Object.keys(utxoData.value).reduce((acc, kpolicy) => {
@@ -258,6 +272,22 @@ export async function search(pattern) {
       console.log("found address")
       return "/address/" + pattern
     }
+    if (await testPath(DB + "/chain/" + pattern)) {
+      console.log("found height")
+      return "/chain/" + pattern
+    }
   }
   throw new Error("Not found: " + pattern)
+}
+
+export function addAlias(addr, alias) {
+  try {
+    fs.writeFileSync(DB + "/addresses/" + addr + "/alias", alias)
+  } catch (err) {}
+}
+
+export function deleteAlias(addr) {
+  try {
+    fs.rmSync(DB + "/addresses/" + addr + "/alias")
+  } catch (err) {}
 }

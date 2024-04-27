@@ -1,8 +1,22 @@
 <script>
-  import "../app.css"
+  import "../../app.css"
   import Legend from "$lib/Legend.svelte"
   import SearchBar from "$lib/SearchBar.svelte"
   export let data
+
+  import { browser } from "$app/environment"
+  export let latest = data.height
+  if (browser) {
+    // API REST call to wait for next block
+    async function getNextBlock() {
+      const resp = await fetch('/api/waitblock')
+      const data  = await resp.json()
+      latest = data.height
+      getNextBlock()
+    }
+    getNextBlock()
+  }
+
 </script>
 <div class="flex flex-col">
   <div class="flex justify-center pb-4">
@@ -10,7 +24,7 @@
   </div>
   <div class="flex justify-between">
     <a class="btn color-block shadow-xl" href="/chain/0">Genesis Block</a>
-    <a class="btn color-block shadow-xl" href="/chain/{data.height}">Latest Block {data.height}</a>
+    <a class="btn color-block shadow-xl" href="/chain/{latest}">Latest Block {latest}</a>
   </div>
   <div class="mt-4 mb-4">
     <SearchBar/>

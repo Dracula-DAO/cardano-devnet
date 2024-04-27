@@ -6,6 +6,14 @@ html {
   padding: 20px;
 }
 
+table {
+  background-color: #eee;
+}
+
+table table {
+  background-color: #dcdcdc;
+}
+
 .color-block {
   background-color: #e0f2fe;
   border: 0px;
