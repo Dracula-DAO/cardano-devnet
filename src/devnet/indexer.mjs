@@ -29,7 +29,7 @@ class DBTransformer {
   }
 
   transformTransaction(ogmiosBlock, ogmiosTransaction) {
-    console.log(JSON.stringify(ogmiosTransaction, null, 2))
+    //console.log(JSON.stringify(ogmiosTransaction, null, 2))
     const obj = {
       id: ogmiosTransaction.id,
       spends: ogmiosTransaction.spends,

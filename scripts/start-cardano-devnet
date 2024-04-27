@@ -30,19 +30,29 @@ if [[ ! $1 == ?(-)+([0-9]) ]]; then
   exit -1
 fi
 
+DOCKER=false
 if [ ! $(type -P "cardano-node" ) ]; then
-  echo "cardano-node not in path, please install the binary"
-  exit -1
+  echo "Warn: cardano-node not in path, configuring for docker"
+  DOCKER=true
+else
+  echo "Found cardano-node in path"
 fi
 
 if [ ! $(type -P "ogmios" ) ]; then
-  echo "ogmios not in path, please install the binary"
+  echo "Warn: ogmios not in path, configuring for docker"
+  DOCKER=true
+else
+  echo "Found ogmios in path"
+fi
+
+if [ $DOCKER=true ] && [ ! $(type -P "docker-compose" ) ]; then
+  echo "docker-compose not in path, please install either cardano-node and ogmios, or docker and docker-compose"
   exit -1
 fi
 
 # Clean up old runs
 RUNTIMEDIR=$DEVNET_ROOT/runtime
-[ -d "$RUNTIMEDIR" ] && { echo "Cleaning up directory $RUNTIMEDIR" ; sudo rm -r $RUNTIMEDIR ; }
+[ -d "$RUNTIMEDIR" ] && { echo "Cleaning up directory $RUNTIMEDIR" ; rm -rf $RUNTIMEDIR ; }
 mkdir -p "$RUNTIMEDIR"
 
 # Set up devnet
