@@ -104,7 +104,7 @@ cardano-cli transaction sign \
   --out-file $TX_SIGNED &
 cardano-cli transaction build \
   --tx-in 8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284#0 \
-  --tx-out addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv+899999834279 \
+  --tx-out addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv+899999829835 \
   --change-address addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv \
   --out-file $TX_DRAFT
 
