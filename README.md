@@ -45,6 +45,8 @@ $ cat db/transactions/41a818da0864ba9f4552af75c943b564870db652c99ea1e31d90e2745e
 <img src="./docs/images/web_explorer_block.png" width="250px"/>
 <img src="./docs/images/web_explorer_tx.png" width="250px"/>
 <img src="./docs/images/web_explorer_utxo.png" width="250px"/>
+<img src="./docs/images/web_explorer_addr.png" width="250px"/>
+<img src="./docs/images/web_explorer_token.png" width="250px"/>
 
 * Lucid provider - a lucid provider that connects the client-side lucid api to the node backend. This is a direct replacement for the lucid blockfrost provider when using the preprod or mainnet networks. Allows developers to send transactions directly from javascript.
 
