@@ -22,8 +22,16 @@ If you don't have or don't want to use cardano-node and ogmios binaries, the dev
 
 ## Installation
 
-1. Ensure node.js is installed for the user you want to run the devnet as. It is easiest to use [nvm](https://github.com/nvm-sh/nvm) for this:
-2. Use nvm to install node.js >= 18.xx.yy
+1. Clone the repo and allow direnv ([direnv](https://direnv.net/) must be installed on your system)
+
+```
+$ git clone https://github.com/cryptophonic/cardano-devnet
+$ cd cardano-devnet
+$ direnv allow
+```
+
+2. Ensure node.js is installed for the user you want to run the devnet as. It is easiest to use [nvm](https://github.com/nvm-sh/nvm) for this:
+3. Use nvm to install node.js >= 18.xx.yy
 
 ```
 $ nvm install 18
@@ -32,13 +40,13 @@ $ node --version
 18.xx.yy
 ```
 
-3. Install the node modules for the main repo.
+4. Install the node modules for the main repo.
 
 ```
 $ npm install
 ```
    
-4. If you plan on using the web-based explorer, update the repository submodule and install the node modules in the explorer directory.
+5. If you plan on using the web-based explorer, update the repository submodule and install the node modules in the explorer directory.
 
 ```
 $ git submodule update --init --recursive
@@ -47,8 +55,3 @@ $ npm install
 ```
 
 That's it! You are now ready to use the cardano devnet and its supporting tools for development.
-
-
-
-
-
