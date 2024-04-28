@@ -42,11 +42,11 @@ $ cat db/transactions/41a818da0864ba9f4552af75c943b564870db652c99ea1e31d90e2745e
 
 * Web-based chain explorer - view blocks, transactions, utxos and address data from a web browser. Optionally specify the directory to use for the db - you can save previous chain states by moving the db directory somewhere and use this saved chain snapshot with the explorer anytime in the future.
 
-<img src="./docs/images/web_explorer_block.png" width="250px"/>
-<img src="./docs/images/web_explorer_tx.png" width="250px"/>
-<img src="./docs/images/web_explorer_utxo.png" width="250px"/>
-<img src="./docs/images/web_explorer_addr.png" width="250px"/>
-<img src="./docs/images/web_explorer_token.png" width="250px"/>
+<img src="./docs/images/web_explorer_block.png" width="600px"/>
+<img src="./docs/images/web_explorer_tx.png" width="600px"/>
+<img src="./docs/images/web_explorer_utxo.png" width="600px"/>
+<img src="./docs/images/web_explorer_addr.png" width="600px"/>
+<img src="./docs/images/web_explorer_token.png" width="600px"/>
 
 * Lucid provider - a lucid provider that connects the client-side lucid api to the node backend. This is a direct replacement for the lucid blockfrost provider when using the preprod or mainnet networks. Allows developers to send transactions directly from javascript.
 
