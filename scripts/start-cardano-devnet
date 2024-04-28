@@ -30,7 +30,6 @@ if [[ ! $1 == ?(-)+([0-9]) ]]; then
   exit -1
 fi
 
-DOCKER=false
 if [ ! $(type -P "cardano-node" ) ]; then
   echo "Warn: cardano-node not in path, configuring for docker"
   DOCKER=true
@@ -54,6 +53,8 @@ fi
 RUNTIMEDIR=$DEVNET_ROOT/runtime
 [ -d "$RUNTIMEDIR" ] && { echo "Cleaning up directory $RUNTIMEDIR" ; rm -rf $RUNTIMEDIR ; }
 mkdir -p "$RUNTIMEDIR"
+mkdir -p "$RUNTIMEDIR/db"
+mkdir -p "$RUNTIMEDIR/ipc"
 
 # Set up devnet
 TARGETDIR=$RUNTIMEDIR/chain
@@ -65,42 +66,51 @@ TX_SIGNED=$RUNTIMEDIR/tx.signed
 mkfifo $TX_DRAFT
 mkfifo $TX_SIGNED
 
-if pgrep -x "cardano-node" > /dev/null
-then
-  echo "Stopping cardano-node"
-  pkill cardano-node
+if [ $DOCKER=true ]; then
+
+  docker-compose up --detach
+  sudo chown $USER $CARDANO_NODE_SOCKET_PATH
+
+else
+
+  if pgrep -x "cardano-node" > /dev/null
+  then
+    echo "Stopping cardano-node"
+    pkill cardano-node
+  fi
+
+  if pgrep -x "ogmios" > /dev/null
+  then
+    echo "Stopping ogmios"
+    pkill ogmios
+  fi
+
+  echo cardano-node run \
+    --config $TARGETDIR/cardano-node.json \
+    --topology $TARGETDIR/topology.json \
+    --database-path $RUNTIMEDIR/db \
+    --socket-path $CARDANO_NODE_SOCKET_PATH \
+    --shelley-operational-certificate $TARGETDIR/opcert.cert \
+    --shelley-kes-key $TARGETDIR/kes.skey \
+    --shelley-vrf-key $TARGETDIR/vrf.skey
+  cardano-node run \
+    --config $TARGETDIR/cardano-node.json \
+    --topology $TARGETDIR/topology.json \
+    --database-path $RUNTIMEDIR/db \
+    --socket-path $CARDANO_NODE_SOCKET_PATH \
+    --shelley-operational-certificate $TARGETDIR/opcert.cert \
+    --shelley-kes-key $TARGETDIR/kes.skey \
+    --shelley-vrf-key $TARGETDIR/vrf.skey > /dev/null 2>&1 &
+  CARDANO_NODE_PID=$!
+
+  # ogmios >6.0.0 required (assumed to be in path)
+  echo ogmios --node-socket $CARDANO_NODE_SOCKET_PATH \
+         --node-config $TARGETDIR/cardano-node.json
+  ogmios --node-socket $CARDANO_NODE_SOCKET_PATH \
+         --node-config $TARGETDIR/cardano-node.json > /dev/null 2>&1 &
+  OGMIOS_PID=$!
+
 fi
-
-if pgrep -x "ogmios" > /dev/null
-then
-  echo "Stopping ogmios"
-  pkill ogmios
-fi
-
-echo cardano-node run \
-  --config $TARGETDIR/cardano-node.json \
-  --topology $TARGETDIR/topology.json \
-  --database-path $TARGETDIR/db \
-  --socket-path $CARDANO_NODE_SOCKET_PATH \
-  --shelley-operational-certificate $TARGETDIR/opcert.cert \
-  --shelley-kes-key $TARGETDIR/kes.skey \
-  --shelley-vrf-key $TARGETDIR/vrf.skey
-cardano-node run \
-  --config $TARGETDIR/cardano-node.json \
-  --topology $TARGETDIR/topology.json \
-  --database-path $TARGETDIR/db \
-  --socket-path $CARDANO_NODE_SOCKET_PATH \
-  --shelley-operational-certificate $TARGETDIR/opcert.cert \
-  --shelley-kes-key $TARGETDIR/kes.skey \
-  --shelley-vrf-key $TARGETDIR/vrf.skey > /dev/null 2>&1 &
-CARDANO_NODE_PID=$!
-
-# ogmios >6.0.0 required (assumed to be in path)
-echo ogmios --node-socket $CARDANO_NODE_SOCKET_PATH \
-       --node-config $TARGETDIR/cardano-node.json
-ogmios --node-socket $CARDANO_NODE_SOCKET_PATH \
-       --node-config $TARGETDIR/cardano-node.json > /dev/null 2>&1 &
-OGMIOS_PID=$!
 
 # transfer from faucet -> faucet to put an indexed tx on-chain (genesis tx's are not indexed)
 # note: we're using named fifos here so we issue the commands in "reverse" order so
@@ -133,10 +143,16 @@ fi
 function clean_up {
   echo
   echo "Trapped exit; cleaning up"
-  echo "Killing cardano-node pid: $CARDANO_NODE_PID"
-  kill $CARDANO_NODE_PID
-  echo "Killing ogmios pid: $OGMIOS_PID"
-  kill $OGMIOS_PID
+
+  if [ $DOCKER=true ]; then
+    docker-compose down
+  else
+    echo "Killing cardano-node pid: $CARDANO_NODE_PID"
+    kill $CARDANO_NODE_PID
+    echo "Killing ogmios pid: $OGMIOS_PID"
+    kill $OGMIOS_PID
+  fi
+
   if [ -n "$START_INDEXER" ]; then
     echo "Killing indexer pid: $INDEXER_PID"
     kill $INDEXER_PID
