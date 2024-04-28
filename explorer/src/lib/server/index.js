@@ -136,7 +136,7 @@ export function loadTransaction(hash) {
     return obj
   })
   if (tx.fee !== undefined) {
-    tx.fee = formatADA(tx.fee.lovelace)
+    tx.fee = formatADA(tx.fee.ada.lovelace)
   }
   return tx
 }

@@ -10,8 +10,8 @@ In order to run the development network and tools, you need one of the following
 
 If you want to have control over the versions of cardano-node and / or ogmios you are using, simply install the binaries directly.
 
-1. Build or download a [cardano-node](https://github.com/IntersectMBO/cardano-node) executable and ensure the binary is in your PATH.
-2. Build or download [ogmios](https://github.com/CardanoSolutions/ogmios) (>6.0.0) and ensure the binary is in your PATH.
+1. Build or download a [cardano-node](https://github.com/IntersectMBO/cardano-node) (>8.9.0) executable and ensure the binary is in your PATH.
+2. Build or download [ogmios](https://github.com/CardanoSolutions/ogmios) (>6.2.0) and ensure the binary is in your PATH.
 
 ### Setup B
 
