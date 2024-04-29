@@ -1,0 +1,3 @@
+[submodule "explorer/elegant-circles"]
+  path = explorer/elegant-circles
+  url = https://github.com/dohliam/elegant-circles.git
