@@ -84,7 +84,7 @@ Where ```<block time>``` is the target number of seconds between blocks. block t
 When the script exits it will kill all the processes automatically.
 
 
-### Step 4. Create some addresses (only with cardano-cli-guru set up as above)
+### Create some addresses (only with cardano-cli-guru set up during installation)
 
 In a third terminal from this directory, run the key-gen command to generate two addresses:
 
@@ -93,7 +93,7 @@ $ key-gen alice
 $ key-gen bob
 ```
 
-### Step 5. Transfer some funds from the faucet to alice (only with cardano-cli-guru set up as above):
+### Transfer some funds from the faucet to alice (only with cardano-cli-guru set up):
 
 ```
 $ utxos faucet
@@ -105,7 +105,7 @@ $ transfer faucet alice 100 8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4
 
 You should see the transaction go into the mempool then eventually get included in a block.
 
-### Step 6. Try out the lucid transfer script to transfer from alice to bob:
+### Try out the lucid transfer script to transfer from alice to bob:
 
 ```
 $ node transfer.mjs alice bob 1.5
@@ -116,6 +116,10 @@ generate and sign the transaction. Note that any utxos in the mempool are includ
 script as part of alice's utxos, which allows you to chain transactions rapidly even if they have 
 not yet been included in a block!
 
-## Explorer
+### Check out the examples
 
-Assuming you started both the indexer with the "-i" option, and the explorer with the "-e" option when running start-cardano-devnet, or alternatively you are running them separately using the ```indexer``` and ```explorer``` scripts in separate sessions, you should be able to connect to ```http://localhost:3000``` with a browser to explore the chain live as it runs.
+The examples directory contains a few different examples of smart contracts that you can take a look at and use as a basis for other projects. If you build something useful for learning please consider contributing with a pull request!
+
+### Check out the web explorer
+
+Assuming you started both the indexer with the "-i" option, and the explorer with the "-e" option when running start-cardano-devnet, or alternatively you are running them separately using the ```indexer``` and ```explorer``` scripts in separate sessions, you should be able to connect to ```http://localhost:5173``` with a browser to explore the chain live as it runs.
