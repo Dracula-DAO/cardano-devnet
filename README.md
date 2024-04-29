@@ -46,7 +46,7 @@ $ cat db/transactions/41a818da0864ba9f4552af75c943b564870db652c99ea1e31d90e2745e
 
 <img src="./docs/images/web_explorer_block.png" width="600px"/>
 <img src="./docs/images/web_explorer_tx.png" width="600px"/>
-<img src="./docs/images/web_explorer_utxo.png" width="600px"/>
+<img src="./docs/images/web_explorer_utxo2.png" width="600px"/>
 <img src="./docs/images/web_explorer_addr.png" width="600px"/>
 <img src="./docs/images/web_explorer_token.png" width="600px"/>
 
