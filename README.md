@@ -66,7 +66,9 @@ Follow the installation instructions, then starting the devnet is as easy as run
 $ start-cardano-devnet -mie 10
 ```
 
-This will start the terminal monitor, filesystem indexer and web explorer with 10-second average block times.
+This will start the terminal monitor, filesystem indexer and web explorer with 10-second average block times. The terminal monitor will run in the terminal where you typed the command (make sure the window is wide enough!)
+
+You can view the web explorer by navigating a browser to [http://localhost:5173](http://localhost:5173).
 
 The startup script is self contained and the usage is as follows:
 
