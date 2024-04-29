@@ -35,8 +35,7 @@ $ cd cardano-devnet
 $ direnv allow
 ```
 
-2. Ensure node.js is installed for the user you want to run the devnet as. It is easiest to use [nvm](https://github.com/nvm-sh/nvm) for this:
-3. Use nvm to install node.js >= 18.xx.yy
+2. Ensure node.js is installed for the user you want to run the devnet as. It is easiest to use [nvm](https://github.com/nvm-sh/nvm) for this. Use nvm to install node.js >= 18.xx.yy
 
 ```
 $ nvm install 18
