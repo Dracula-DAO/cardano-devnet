@@ -30,7 +30,7 @@ class DBTransformer {
 
   transformTransaction(ogmiosBlock, ogmiosTransaction) {
     //console.log(JSON.stringify(ogmiosTransaction, null, 2))
-    return {
+    const obj = {
       id: ogmiosTransaction.id,
       spends: ogmiosTransaction.spends,
       fee: ogmiosTransaction.fee,
@@ -42,8 +42,17 @@ class DBTransformer {
       }),
       outputs: ogmiosTransaction.outputs.map(o => {
         return o.address
+      }),
+    }
+    if (ogmiosTransaction.scripts !== undefined) {
+      obj.scripts = Object.keys(ogmiosTransaction.scripts).map(cred => {
+        return {
+          cred: cred,
+          cbor: ogmiosTransaction.scripts[cred].cbor
+        }
       })
     }
+    return obj
   }
 
 }
@@ -71,7 +80,12 @@ class DBWriter {
     fs.mkdirSync(genesis_tx_path + "/outputs/0", { recursive: true })
     fs.writeFileSync(genesis_tx_path + "/tx", JSON.stringify({
       id: GENESIS_FAUCET_HASH,
-      producedHeight: 0,
+      producedHeight: {
+        ada: {
+          lovelace: 0
+        }
+      },
+      fee: 0,
       outputs: [
         ADDR_FAUCET
       ]
@@ -97,6 +111,11 @@ class DBWriter {
     adaLedger[ADDR_FAUCET] = GENESIS_FAUCET_LOVELACE
     fs.writeFileSync(this.db + "/tokens/ada/lovelace/ledger", JSON.stringify(adaLedger, null, 2))
     relative_link(genesis_tx_path + "/outputs/0", genesis_address_path + "/" + GENESIS_FAUCET_HASH + "#0")
+    fs.writeFileSync(this.db + "/tokens/ledger", JSON.stringify({
+      ada: {
+        lovelace: GENESIS_FAUCET_LOVELACE
+      }
+    }, null, 2))
   }
 
   writeBlock(block) {
@@ -125,6 +144,17 @@ class DBWriter {
     fs.mkdirSync(this.db + "/transactions/" + tx.id + "/outputs")
     fs.writeFileSync(this.db + "/transactions/" + tx.id + "/tx", formattedTransaction)
     relative_link(this.db + "/blocks/" + block.id + "/block", this.db + "/transactions/" + tx.id + "/block")
+    let redeemers = {}
+    if (tx.redeemers !== undefined) {
+      redeemers = Object.keys(tx.redeemers).reduce((acc, r) => {
+        const [type, indx] = r.split(":")
+        acc[indx] = {
+          type: type,
+          data: tx.redeemers[r].redeemer
+        }
+        return acc
+      }, {})
+    }
     tx.inputs.forEach((input, index) => {
       fs.mkdirSync(this.db + "/transactions/" + tx.id + "/inputs/" + index)
       relative_link(this.db + "/transactions/" + input.transaction.id + "/outputs/" + input.index + "/output", this.db + "/transactions/" + tx.id + "/inputs/" + index + "/input")
@@ -133,6 +163,25 @@ class DBWriter {
       const inputUtxo = JSON.parse(fs.readFileSync(inputUtxoFile))
       this.consume(inputUtxo)
       fs.unlinkSync(this.db + "/addresses/" + inputUtxo.address + "/" + input.transaction.id + "#" + input.index)
+      if (redeemers[index] !== undefined) {
+        inputUtxo.redeemer = redeemers[index]
+      }
+
+      // Add to address history
+      let history
+      try {
+        history = JSON.parse(fs.readFileSync(this.db + "/addresses/" + inputUtxo.address + "/history"))
+      } catch (fileNotFound) {
+        history = []
+      }
+      if (history.length === 0 || history[history.length-1].id !== tx.id) {
+        history.push({
+          block: block.height,
+          id: tx.id
+        })
+      }
+      fs.writeFileSync(this.db + "/addresses/" + inputUtxo.address + "/history", JSON.stringify(history, null, 2))
+
       inputUtxo.spentBy = tx.id
       inputUtxo.spentHeight = block.height
       fs.writeFileSync(inputUtxoFile, JSON.stringify(inputUtxo, null, 2))
@@ -154,6 +203,7 @@ class DBWriter {
     try {
       balances = JSON.parse(fs.readFileSync(this.db + "/addresses/" + utxo.address + "/ledger"))
     } catch (fileNotFound) {}
+    const floats = JSON.parse(fs.readFileSync(this.db + "/tokens/ledger"))
     Object.keys(utxo.value).forEach(pid => {
       if (!fs.existsSync(this.db + "/tokens/" + pid)) {
         fs.mkdirSync(this.db + "/tokens/" + pid)
@@ -168,8 +218,12 @@ class DBWriter {
         } catch {}
         if (balances[pid] === undefined) balances[pid] = {}
         if (balances[pid][tn] === undefined) balances[pid][tn] = 0
-        if (tokenLedger[utxo.address] === undefined) tokenLedger[utxo.address] = 0
         balances[pid][tn] += utxo.value[pid][tn]
+        if (floats[pid] === undefined) floats[pid] = {}
+        if (floats[pid][tn] === undefined) floats[pid][tn] = 0
+        floats[pid][tn] += utxo.value[pid][tn]
+        if (floats[pid] === undefined) floats[pid] = {}
+        if (tokenLedger[utxo.address] === undefined) tokenLedger[utxo.address] = 0
         tokenLedger[utxo.address] += utxo.value[pid][tn]
         if (!fs.existsSync(this.db + "/tokens/" + pid + "/" + tn)) {
           fs.mkdirSync(this.db + "/tokens/" + pid + "/" + tn)
@@ -178,21 +232,27 @@ class DBWriter {
       })
     })
     fs.writeFileSync(this.db + "/addresses/" + utxo.address + "/ledger", JSON.stringify(balances, null, 2))
+    fs.writeFileSync(this.db + "/tokens/ledger", JSON.stringify(floats, null, 2))
   }
   
   consume(utxo) {
     const balances = JSON.parse(fs.readFileSync(this.db + "/addresses/" + utxo.address + "/ledger"))
+    const floats = JSON.parse(fs.readFileSync(this.db + "/tokens/ledger"))
     Object.keys(utxo.value).forEach(pid => {
       Object.keys(utxo.value[pid]).forEach(tn => {
         const tokenLedger = JSON.parse(fs.readFileSync(this.db + "/tokens/" + pid + "/" + tn + "/ledger"))
         if (balances[pid] === undefined) balances[pid] = {}
         if (balances[pid][tn] === undefined) balances[pid][tn] = 0
         balances[pid][tn] -= utxo.value[pid][tn]
+        if (floats[pid] === undefined) floats[pid] = {}
+        if (balances[pid][tn] === undefined) floats[pid][tn] = 0
+        floats[pid][tn] -= utxo.value[pid][tn]
         tokenLedger[utxo.address] -= utxo.value[pid][tn]
         fs.writeFileSync(this.db + "/tokens/" + pid + "/" + tn + "/ledger", JSON.stringify(tokenLedger, null, 2))
       })
     })
     fs.writeFileSync(this.db + "/addresses/" + utxo.address + "/ledger", JSON.stringify(balances, null, 2))
+    fs.writeFileSync(this.db + "/tokens/ledger", JSON.stringify(floats, null, 2))
   }
 
 }

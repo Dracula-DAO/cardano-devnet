@@ -19,7 +19,7 @@ BASEDIR="$DEVNET_ROOT"
 RUNTIMEDIR="$BASEDIR/runtime"
 TARGETDIR="$RUNTIMEDIR/chain"
 
-[ -d "$TARGETDIR" ] && { echo "Cleaning up directory $TARGETDIR" ; sudo rm -r $TARGETDIR ; }
+[ -d "$TARGETDIR" ] && { echo "Cleaning up directory $TARGETDIR" ; rm -rf $TARGETDIR ; }
 mkdir -p "$TARGETDIR"
 
 cp "$BASEDIR"/config/genesis/* "$TARGETDIR"

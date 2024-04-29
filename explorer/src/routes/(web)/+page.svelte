@@ -1,0 +1,1 @@
+<p>Cardano Devnet creates a completely local devnet chain running cardano-node and ogmios in the background.</p>
