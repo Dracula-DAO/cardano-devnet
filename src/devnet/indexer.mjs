@@ -80,12 +80,12 @@ class DBWriter {
     fs.mkdirSync(genesis_tx_path + "/outputs/0", { recursive: true })
     fs.writeFileSync(genesis_tx_path + "/tx", JSON.stringify({
       id: GENESIS_FAUCET_HASH,
-      producedHeight: {
+      producedHeight: 0,
+      fee: {
         ada: {
           lovelace: 0
         }
       },
-      fee: 0,
       outputs: [
         ADDR_FAUCET
       ]
