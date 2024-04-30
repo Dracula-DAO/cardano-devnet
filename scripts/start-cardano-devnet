@@ -37,6 +37,13 @@ else
   echo "Found cardano-node in path"
 fi
 
+if [ ! $(type -P "cardano-cli" ) ]; then
+  echo "Warn: cardano-cli not in path, configuring for docker"
+  DOCKER=true
+else
+  echo "Found cardano-cli in path"
+fi
+
 if [ ! $(type -P "ogmios" ) ]; then
   echo "Warn: ogmios not in path, configuring for docker"
   DOCKER=true
@@ -44,8 +51,8 @@ else
   echo "Found ogmios in path"
 fi
 
-if [ "$DOCKER" == "true" ] && [ ! $(type -P "docker-compose" ) ]; then
-  echo "docker-compose not in path, please install either cardano-node and ogmios, or docker and docker-compose"
+if [ "$DOCKER" == "true" ] && [ ! $(type -P "docker" ) ]; then
+  echo "docker not in path, please install either cardano-node and ogmios, or docker"
   exit -1
 fi
 
@@ -68,7 +75,7 @@ mkfifo $TX_SIGNED
 
 if [ "$DOCKER" == "true" ]; then
 
-  docker-compose up --detach
+  docker compose up --detach
   sudo chown $USER $CARDANO_NODE_SOCKET_PATH
 
 else
@@ -154,7 +161,7 @@ function clean_up {
   fi
 
 if [ "$DOCKER" == "true" ]; then
-    docker-compose down
+    docker compose down
   else
     echo "Killing cardano-node pid: $CARDANO_NODE_PID"
     kill $CARDANO_NODE_PID

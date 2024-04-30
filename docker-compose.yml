@@ -1,8 +1,14 @@
-version: "3.5"
-
 services:
+  cardano-cli:
+    image: cardanosolutions/cardano-node-ogmios:latest
+    entrypoint: /usr/local/bin/cardano-cli
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${DEVNET_ROOT}:/devnet
+
   cardano-node:
-    image: ghcr.io/intersectmbo/cardano-node:8.9.2
+    image: cardanosolutions/cardano-node-ogmios:latest
     environment:
       - CARDANO_BLOCK_PRODUCER=true
     command: [
@@ -22,7 +28,7 @@ services:
     restart: on-failure
 
   ogmios:
-    image: cardanosolutions/ogmios:latest
+    image: cardanosolutions/cardano-node-ogmios:latest
     restart: on-failure
     command: [
       "--host", "0.0.0.0",
