@@ -1,4 +1,10 @@
 services:
+  #shell:
+    #image: cardanosolutions/cardano-node-ogmios:latest
+    #entrypoint: /bin/bash
+    #stdin_open: true
+    #tty: true
+
   cardano-cli:
     image: cardanosolutions/cardano-node-ogmios:latest
     entrypoint: /usr/local/bin/cardano-cli
@@ -6,11 +12,18 @@ services:
     tty: true
     volumes:
       - ${DEVNET_ROOT}:/devnet
+        ${KEYS_PATH}:/keys
+    environment:
+      - CARDANO_NODE_SOCKET_PATH=/devnet/runtime/ipc/node.socket
+      - CARDANO_NODE_NETWORK_ID=42
 
   cardano-node:
     image: cardanosolutions/cardano-node-ogmios:latest
+    entrypoint: /usr/local/bin/cardano-node
     environment:
       - CARDANO_BLOCK_PRODUCER=true
+      - CARDANO_NODE_SOCKET_PATH=/devnet/runtime/ipc/node.socket
+      - CARDANO_NODE_NETWORK_ID=42
     command: [
       "run",
       "--config", "/config/cardano-node.json",
@@ -29,6 +42,7 @@ services:
 
   ogmios:
     image: cardanosolutions/cardano-node-ogmios:latest
+    entrypoint: /bin/ogmios
     restart: on-failure
     command: [
       "--host", "0.0.0.0",
