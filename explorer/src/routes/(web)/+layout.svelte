@@ -39,7 +39,7 @@
         </a>
       {/each}
     </div>
-    <div class="flex ml-4 mr-4 grow">
+    <div class="flex flex-col ml-4 mr-4 grow">
       <slot/>
     </div>
     <div class="bg-gray-200 card shadow-xl p-4">

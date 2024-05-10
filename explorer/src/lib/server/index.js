@@ -46,6 +46,21 @@ export function loadBlock(path) {
   }
 }
 
+export function loadPage(type, page) {
+  const pg = JSON.parse(fs.readFileSync(DB + "/pages/" + type + "/" + page))
+  const newObj = {
+    pageIndex: page,
+    pageData: pg.map(p => {
+      return {
+        height: p.height,
+        id: small_hash(p.id)
+      }
+    })
+  }
+  console.log(JSON.stringify(newObj, null, 2))
+  return newObj
+}
+
 export function loadLatest() {
   const latest = JSON.parse(fs.readFileSync(DB + "/latest"))
   const tokens = JSON.parse(fs.readFileSync(DB + "/tokens/ledger"))
@@ -201,7 +216,10 @@ export function loadAddress(addr) {
     })
     return acc
   }, {})
-  const history = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/history"))
+  let history = []
+  try {
+    const history = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/history"))
+  } catch (fileNotFound) {} 
   const obj = {
     address: [addr, small_addr(addr)],
     alias: alias,
@@ -223,11 +241,13 @@ export function loadToken(policy, token) {
   const tokData = JSON.parse(fs.readFileSync(DB + "/tokens/" + policy + "/" + token + "/ledger"))
   let count = 0
   const pagedData = Object.keys(tokData).reduce((acc, addr) => {
+    let amt = tokData[addr]
+    if (policy === "ada" && token === "lovelace") amt = formatADA(amt)
     if (count < 10) {
       const alias = addr_alias(addr)
       acc.push({
         address: [addr, small_addr(addr)],
-        amount: tokData[addr],
+        amount: amt,
         alias: alias
       })
       count++
