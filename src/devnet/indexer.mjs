@@ -166,6 +166,7 @@ class DBWriter {
       id: dbBlock.id
     })
     fs.writeFileSync(this.db + "/pages/blocks/" + page, JSON.stringify(pageObj, null, 2))
+    fs.writeFileSync(this.db + "/pages/blocks/last", JSON.stringify(page))
   }
 
   writeTransaction(block, tx) {

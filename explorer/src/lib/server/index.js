@@ -48,8 +48,10 @@ export function loadBlock(path) {
 
 export function loadPage(type, page) {
   const pg = JSON.parse(fs.readFileSync(DB + "/pages/" + type + "/" + page))
+  const last = JSON.parse(fs.readFileSync(DB + "/pages/" + type + "/last"))
   const newObj = {
-    pageIndex: page,
+    pageIndex: parseInt(page),
+    lastPage: parseInt(last),
     pageData: pg.map(p => {
       return {
         height: p.height,
@@ -218,7 +220,7 @@ export function loadAddress(addr) {
   }, {})
   let history = []
   try {
-    const history = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/history"))
+    history = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/history"))
   } catch (fileNotFound) {} 
   const obj = {
     address: [addr, small_addr(addr)],
