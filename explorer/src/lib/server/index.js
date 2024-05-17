@@ -40,6 +40,7 @@ export function loadBlock(path) {
   return {
     hash: [block.id, small_hash(block.id)],
     height: block.height,
+    page: block.page,
     slot: block.slot,
     latest: latest.height,
     txs: txs
@@ -55,7 +56,8 @@ export function loadPage(type, page) {
     pageData: pg.map(p => {
       return {
         height: p.height,
-        id: small_hash(p.id)
+        id: small_hash(p.id),
+        txCount: p.txCount
       }
     })
   }

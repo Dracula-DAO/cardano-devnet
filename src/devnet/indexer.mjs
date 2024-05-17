@@ -140,6 +140,7 @@ class DBWriter {
 
   writeBlock(block) {
     const dbBlock = this.transformer.transformBlock(block)
+    dbBlock.page = Math.floor(dbBlock.height / PAGE_LENGTH_BLOCKS)
     console.log(`Latest block: height[${dbBlock.height}] id[${dbBlock.id}]`)
     const formattedBlock = JSON.stringify(dbBlock, null, 2)
     fs.mkdirSync(this.db + "/blocks/" + dbBlock.id)
@@ -156,17 +157,17 @@ class DBWriter {
     fs.writeFileSync(this.db + "/latest", formattedBlock)
 
     // Update pages
-    const page = Math.floor(dbBlock.height / PAGE_LENGTH_BLOCKS)
     let pageObj = []
     try {
-      pageObj = JSON.parse(fs.readFileSync(this.db + "/pages/blocks/" + page))
+      pageObj = JSON.parse(fs.readFileSync(this.db + "/pages/blocks/" + dbBlock.page))
     } catch (noSuchFile) {}
     pageObj.push({
       height: dbBlock.height,
-      id: dbBlock.id
+      id: dbBlock.id,
+      txCount: block.transactions.length
     })
-    fs.writeFileSync(this.db + "/pages/blocks/" + page, JSON.stringify(pageObj, null, 2))
-    fs.writeFileSync(this.db + "/pages/blocks/last", JSON.stringify(page))
+    fs.writeFileSync(this.db + "/pages/blocks/" + dbBlock.page, JSON.stringify(pageObj, null, 2))
+    fs.writeFileSync(this.db + "/pages/blocks/last", JSON.stringify(dbBlock.page))
   }
 
   writeTransaction(block, tx) {
