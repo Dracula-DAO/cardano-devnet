@@ -128,9 +128,12 @@ class DBWriter {
     }, null, 2))
 
     // Write pages
-    const txObj = {}
-    txObj[0] = GENESIS_FAUCET_HASH
-    txObj[GENESIS_FAUCET_HASH] = {
+    const txObj = {
+      list: [],
+      ids: {}
+    }
+    txObj.list.push(GENESIS_FAUCET_HASH)
+    txObj.ids[GENESIS_FAUCET_HASH] = {
       index: 0,
       unspentCount: 1,
       spent: [ false ]
@@ -226,8 +229,8 @@ class DBWriter {
       const txpage = Math.floor(inTx.index / PAGE_LENGTH_BLOCKS)
       const txPageFile = this.db + "/pages/transactions/" + txpage
       const txPageObj = JSON.parse(fs.readFileSync(txPageFile))
-      txPageObj[input.transaction.id].spent[input.index] = true
-      txPageObj[input.transaction.id].unspentCount--
+      txPageObj.ids[input.transaction.id].spent[input.index] = true
+      txPageObj.ids[input.transaction.id].unspentCount--
       fs.writeFileSync(txPageFile, JSON.stringify(txPageObj, null, 2))
     })
     tx.outputs.forEach((output, index) => {
@@ -247,8 +250,8 @@ class DBWriter {
     try {
       pageObj = JSON.parse(fs.readFileSync(this.db + "/pages/transactions/" + page))
     } catch (noSuchFile) {}
-    pageObj[dbTx.index] = dbTx.id
-    pageObj[dbTx.id] = {
+    pageObj.list.push(dbTx.id)
+    pageObj.ids[dbTx.id] = {
       index: dbTx.index,
       unspentCount: tx.outputs.length,
       spent: tx.outputs.map(() => { return false })
