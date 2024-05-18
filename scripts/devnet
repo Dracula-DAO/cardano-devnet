@@ -19,21 +19,17 @@ BASEDIR="$DEVNET_ROOT"
 RUNTIMEDIR="$BASEDIR/runtime"
 TARGETDIR="$RUNTIMEDIR/chain"
 
-if [ "$DOCKER" == "true" ] || [ ! $(type -P "cardano-cli" ) ]; then
-  echo "devnet: cardano-cli not in path, configuring for docker"
-  CARDANO_CLI="docker compose -f $DEVNET_ROOT/docker-compose.yml run --rm cardano-cli"
-  CARDANO_CLI_TARGETDIR="/devnet/runtime/chain"
-else
-  echo "devnet: found cardano-cli in path"
-  CARDANO_CLI="cardano-cli"
-  CARDANO_CLI_TARGETDIR="$TARGETDIR"
-fi
+CARDANO_CLI=cardano-cli
+CARDANO_CLI_TARGETDIR="$TARGETDIR"
 
-[ -d "$TARGETDIR" ] && { echo "Cleaning up directory $TARGETDIR" ; sudo rm -rf $TARGETDIR ; }
-mkdir -p "$TARGETDIR"
+[ -d "$TARGETDIR" ] && { echo "Cleaning up directory $TARGETDIR" ; rm -rf $TARGETDIR ; }
+mkdir -p "$TARGETDIR/assets/keys"
+mkdir -p "$TARGETDIR/assets/addr"
 
 cp "$BASEDIR"/config/genesis/* "$TARGETDIR"
 cp "$BASEDIR"/config/protocol-parameters.json "$TARGETDIR"
+cp "$BASEDIR"/config/credentials/faucet.*key "$TARGETDIR/assets/keys"
+cp "$BASEDIR"/config/credentials/faucet.addr "$TARGETDIR/assets/addr"
 
 # Copy faucet keys, address to the CARDANO_CLI_GURU assets directory
 if [[ -v CARDANO_CLI_GURU ]]; then

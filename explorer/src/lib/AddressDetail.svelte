@@ -56,30 +56,32 @@
         </table>
       </td>
     </tr>
-    <tr>
-      <td>Transaction History</td>
-      <td>
-        <table class="table-header-group border-separate border-spacing-4">
-          <thead>
-            <tr>
-              <th>Block</th>
-              <th>Transaction</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each addr.history as tx}
+    {#if addr.history.length > 0}
+      <tr>
+        <td>Transaction History</td>
+        <td>
+          <table class="table-header-group border-separate border-spacing-4">
+            <thead>
               <tr>
-                <td class="text-center">
-                  <a class="btn color-block shadow-xl" href="/chain/{tx.block}">Block {tx.block}</a>
-                </td>
-                <td class="text-center">
-                  <a class="btn color-transaction shadow-xl" href="/transaction/{tx.id[0]}">Tx {tx.id[1]}</a>
-                </td>
+                <th>Block</th>
+                <th>Transaction</th>
               </tr>
-            {/each}
-          </tbody>
-        </table>
-      </td>
-    </tr>
+            </thead>
+            <tbody>
+              {#each addr.history as tx}
+                <tr>
+                  <td class="text-center">
+                    <a class="btn color-block shadow-xl" href="/chain/{tx.block}">Block {tx.block}</a>
+                  </td>
+                  <td class="text-center">
+                    <a class="btn color-transaction shadow-xl" href="/transaction/{tx.id[0]}">Tx {tx.id[1]}</a>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    {/if}
   </tbody>
 </table>
