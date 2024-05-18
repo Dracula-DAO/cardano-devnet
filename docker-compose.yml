@@ -1,48 +1,49 @@
 services:
   #shell:
     #image: cardanosolutions/cardano-node-ogmios:latest
+    #user: $MY_UID:$MY_GID
     #entrypoint: /bin/bash
     #stdin_open: true
     #tty: true
     #volumes:
-      #- ${DEVNET_ROOT}:/devnet
-      #- ${KEYS_PATH}:/keys
+      #- ${DEVNET_ROOT}/runtime:/runtime
+      #- ${CARDANO_ASSETS_PATH}:/assets
 
   cardano-cli:
     image: cardanosolutions/cardano-node-ogmios:latest
+    user: $MY_UID:$MY_GID
     entrypoint: /usr/local/bin/cardano-cli
     volumes:
-      - ${DEVNET_ROOT}:/devnet
-      - ${KEYS_PATH}:/keys
+      - ${DEVNET_ROOT}/runtime:/runtime
+      - ${CARDANO_ASSETS_PATH}:/assets
     environment:
-      - CARDANO_NODE_SOCKET_PATH=/devnet/runtime/ipc/node.socket
+      - CARDANO_NODE_SOCKET_PATH=/runtime/ipc/node.socket
       - CARDANO_NODE_NETWORK_ID=42
 
   cardano-node:
     image: cardanosolutions/cardano-node-ogmios:latest
+    user: $MY_UID:$MY_GID
     entrypoint: /usr/local/bin/cardano-node
     environment:
       - CARDANO_BLOCK_PRODUCER=true
-      - CARDANO_NODE_SOCKET_PATH=/devnet/runtime/ipc/node.socket
       - CARDANO_NODE_NETWORK_ID=42
     command: [
       "run",
-      "--config", "/config/cardano-node.json",
-      "--topology", "/config/topology.json",
-      "--database-path", "/data",
-      "--socket-path", "/ipc/node.socket",
-      "--shelley-operational-certificate", "/config/opcert.cert",
-      "--shelley-kes-key", "/config/kes.skey",
-      "--shelley-vrf-key", "/config/vrf.skey"
+      "--config", "/runtime/chain/cardano-node.json",
+      "--topology", "/runtime/chain/topology.json",
+      "--database-path", "/runtime/data",
+      "--socket-path", "/runtime/ipc/node.socket",
+      "--shelley-operational-certificate", "/runtime/chain/opcert.cert",
+      "--shelley-kes-key", "/runtime/chain/kes.skey",
+      "--shelley-vrf-key", "/runtime/chain/vrf.skey"
     ]
     volumes:
-      - ./runtime/chain:/config
-      - ./runtime/ipc:/ipc
-      - ./runtime/db:/data
+      - ${DEVNET_ROOT}/runtime:/runtime
     restart: on-failure
 
   ogmios:
     image: cardanosolutions/cardano-node-ogmios:latest
+    user: $MY_UID:$MY_GID
     entrypoint: /bin/ogmios
     restart: on-failure
     command: [
@@ -51,8 +52,8 @@ services:
       "--node-config", "/config/cardano-node.json"
     ]
     volumes:
-      - ./runtime/chain:/config
-      - ./runtime/ipc:/ipc
+      - ${DEVNET_ROOT}/runtime/chain:/config
+      - ${DEVNET_ROOT}/runtime/ipc:/ipc
     ports:
       - ${OGMIOS_PORT:-1337}:1337
 

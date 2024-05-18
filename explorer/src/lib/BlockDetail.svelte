@@ -5,6 +5,7 @@
   {#if block.height > 0}
   <a class="btn mr-2 color-block shadow-xl" href="/chain/{block.height-1}">&lt;&lt;&lt; Prev Block {block.height-1}</a>
   {/if}
+  <a class="btn mr-2 shadow-xl" href="/pages/blocks/{block.page}">Page</a>
   {#if block.height < block.latest}
   <a class="btn color-block shadow-xl" href="/chain/{block.height+1}">Next Block {block.height+1} &gt;&gt;&gt;</a>
   {/if}

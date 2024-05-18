@@ -9,6 +9,9 @@ const OGMIOS_PORT = 1337
 const ADDR_FAUCET = "addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv"
 const GENESIS_FAUCET_HASH = "8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284"
 const GENESIS_FAUCET_LOVELACE = 900000000000
+let tx_index = 1
+
+const PAGE_LENGTH_BLOCKS = 25
 
 function relative_link(target, frompath) {
   fs.symlinkSync(path.relative(path.dirname(frompath), target), frompath)
@@ -32,6 +35,7 @@ class DBTransformer {
     //console.log(JSON.stringify(ogmiosTransaction, null, 2))
     const obj = {
       id: ogmiosTransaction.id,
+      index: tx_index++,
       spends: ogmiosTransaction.spends,
       fee: ogmiosTransaction.fee,
       validityInterval: ogmiosTransaction.validityInterval,
@@ -74,12 +78,18 @@ class DBWriter {
     fs.mkdirSync(this.db + "/addresses")
     fs.mkdirSync(this.db + "/tokens")
 
+    // 
+    fs.mkdirSync(this.db + "/pages")
+    fs.mkdirSync(this.db + "/pages/blocks")
+    fs.mkdirSync(this.db + "/pages/transactions")
+
     // Populate initial faucet utxo (genesis), hardcoded because the hash will
     // never change
     const genesis_tx_path = this.db + "/transactions/" + GENESIS_FAUCET_HASH
     fs.mkdirSync(genesis_tx_path + "/outputs/0", { recursive: true })
     fs.writeFileSync(genesis_tx_path + "/tx", JSON.stringify({
       id: GENESIS_FAUCET_HASH,
+      index: 0,
       producedHeight: 0,
       fee: {
         ada: {
@@ -116,10 +126,24 @@ class DBWriter {
         lovelace: GENESIS_FAUCET_LOVELACE
       }
     }, null, 2))
+
+    // Write pages
+    const txObj = {
+      list: [],
+      ids: {}
+    }
+    txObj.list.push(GENESIS_FAUCET_HASH)
+    txObj.ids[GENESIS_FAUCET_HASH] = {
+      index: 0,
+      unspentCount: 1,
+      spent: [ false ]
+    }
+    fs.writeFileSync(this.db + "/pages/transactions/0", JSON.stringify(txObj, null, 2))
   }
 
   writeBlock(block) {
     const dbBlock = this.transformer.transformBlock(block)
+    dbBlock.page = Math.floor(dbBlock.height / PAGE_LENGTH_BLOCKS)
     console.log(`Latest block: height[${dbBlock.height}] id[${dbBlock.id}]`)
     const formattedBlock = JSON.stringify(dbBlock, null, 2)
     fs.mkdirSync(this.db + "/blocks/" + dbBlock.id)
@@ -134,6 +158,19 @@ class DBWriter {
     })
     // Write over file, do not remove, to allow file watching
     fs.writeFileSync(this.db + "/latest", formattedBlock)
+
+    // Update pages
+    let pageObj = []
+    try {
+      pageObj = JSON.parse(fs.readFileSync(this.db + "/pages/blocks/" + dbBlock.page))
+    } catch (noSuchFile) {}
+    pageObj.push({
+      height: dbBlock.height,
+      id: dbBlock.id,
+      txCount: block.transactions.length
+    })
+    fs.writeFileSync(this.db + "/pages/blocks/" + dbBlock.page, JSON.stringify(pageObj, null, 2))
+    fs.writeFileSync(this.db + "/pages/blocks/last", JSON.stringify(dbBlock.page))
   }
 
   writeTransaction(block, tx) {
@@ -182,9 +219,19 @@ class DBWriter {
       }
       fs.writeFileSync(this.db + "/addresses/" + inputUtxo.address + "/history", JSON.stringify(history, null, 2))
 
+      // update output status
       inputUtxo.spentBy = tx.id
       inputUtxo.spentHeight = block.height
       fs.writeFileSync(inputUtxoFile, JSON.stringify(inputUtxo, null, 2))
+
+      // update page
+      const inTx = JSON.parse(fs.readFileSync(this.db + "/transactions/" + input.transaction.id + "/tx"))
+      const txpage = Math.floor(inTx.index / PAGE_LENGTH_BLOCKS)
+      const txPageFile = this.db + "/pages/transactions/" + txpage
+      const txPageObj = JSON.parse(fs.readFileSync(txPageFile))
+      txPageObj.ids[input.transaction.id].spent[input.index] = true
+      txPageObj.ids[input.transaction.id].unspentCount--
+      fs.writeFileSync(txPageFile, JSON.stringify(txPageObj, null, 2))
     })
     tx.outputs.forEach((output, index) => {
       fs.mkdirSync(this.db + "/transactions/" + tx.id + "/outputs/" + index)
@@ -196,6 +243,20 @@ class DBWriter {
       relative_link(this.db + "/transactions/" + tx.id + "/outputs/" + index + "/output", 
         this.db + "/addresses/" + output.address + "/" + tx.id + "#" + index)
     })
+    
+    // Update pages
+    const page = Math.floor(dbTx.index / PAGE_LENGTH_BLOCKS)
+    let pageObj = {}
+    try {
+      pageObj = JSON.parse(fs.readFileSync(this.db + "/pages/transactions/" + page))
+    } catch (noSuchFile) {}
+    pageObj.list.push(dbTx.id)
+    pageObj.ids[dbTx.id] = {
+      index: dbTx.index,
+      unspentCount: tx.outputs.length,
+      spent: tx.outputs.map(() => { return false })
+    }
+    fs.writeFileSync(this.db + "/pages/transactions/" + page, JSON.stringify(pageObj, null, 2))
   }
 
   produce(utxo) {
