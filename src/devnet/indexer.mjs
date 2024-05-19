@@ -116,6 +116,7 @@ class DBWriter {
         lovelace: GENESIS_FAUCET_LOVELACE
       }
     }, null, 2))
+    fs.writeFileSync(genesis_address_path + "/alias", "faucet")
     fs.mkdirSync(this.db + "/tokens/ada/lovelace", { recursive: true })
     const adaLedger = {}
     adaLedger[ADDR_FAUCET] = GENESIS_FAUCET_LOVELACE

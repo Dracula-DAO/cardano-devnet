@@ -31,7 +31,7 @@
         {#if block.txs.length > 0}
           <div class="flex flex-row flex-wrap">
             {#each block.txs as tx}
-              <a class="flex flex-col btn color-transaction shadow-xl" href="/transaction/{tx.hash[0]}">
+              <a class="flex flex-col btn color-transaction mr-2 shadow-xl" href="/transaction/{tx.hash[0]}">
                 <div>Tx {tx.hash[1]}</div>
                 <div>{tx.inputCount} input{#if tx.inputCount != 1}s{/if} -&gt; {tx.outputCount} output{#if tx.outputCount != 1}s{/if}</div>
               </a>    

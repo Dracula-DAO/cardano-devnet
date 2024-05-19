@@ -47,42 +47,6 @@ export function loadBlock(path) {
   }
 }
 
-export function loadBlocksPage(page) {
-  const pg = JSON.parse(fs.readFileSync(DB + "/pages/blocks/" + page))
-  const last = JSON.parse(fs.readFileSync(DB + "/pages/blocks/last"))
-  const newObj = {
-    pageIndex: parseInt(page),
-    lastPage: parseInt(last),
-    pageData: pg.map(p => {
-      return {
-        height: p.height,
-        id: small_hash(p.id),
-        txCount: p.txCount
-      }
-    })
-  }
-  return newObj
-}
-
-export function loadTransactionsPage(page) {
-  const pg = JSON.parse(fs.readFileSync(DB + "/pages/transactions/" + page))
-  const last = JSON.parse(fs.readFileSync(DB + "/pages/transactions/last"))
-  const newObj = {
-    pageIndex: parseInt(page),
-    lastPage: parseInt(last),
-    pageData: pg.list.map(p => {
-      return {
-        index: pg.ids[p].index,
-        id: [p, small_hash(p)],
-        unspentCount: pg.ids[p].unspentCount,
-        spentCount: pg.ids[p].spent.length - pg.ids[p].unspentCount,
-        utxos: pg.ids[p].spent
-      }
-    })
-  }
-  return newObj
-}
-
 export function loadLatest() {
   const latest = JSON.parse(fs.readFileSync(DB + "/latest"))
   const tokens = JSON.parse(fs.readFileSync(DB + "/tokens/ledger"))
@@ -152,6 +116,8 @@ export function loadTransaction(hash) {
       obj.value["ada"] = formatADA(obj.value["ada:lovelace"])
       return obj
     })
+  } else {
+    tx.inputs = []
   }
   tx.outputs = tx.outputs.map((output, index) => {
     const outtxfile = DB + "/transactions/" + tx.id + "/outputs/" + index + "/output"
@@ -332,4 +298,76 @@ export function deleteAlias(addr) {
   try {
     fs.rmSync(DB + "/addresses/" + addr + "/alias")
   } catch (err) {}
+}
+
+export function loadBlocksPage(page) {
+  const pg = JSON.parse(fs.readFileSync(DB + "/pages/blocks/" + page))
+  const last = JSON.parse(fs.readFileSync(DB + "/pages/blocks/last"))
+  const newObj = {
+    pageIndex: parseInt(page),
+    lastPage: parseInt(last),
+    pageData: pg.map(p => {
+      return {
+        height: p.height,
+        id: small_hash(p.id),
+        txCount: p.txCount
+      }
+    })
+  }
+  return newObj
+}
+
+export function loadTransactionsPage(page) {
+  const pg = JSON.parse(fs.readFileSync(DB + "/pages/transactions/" + page))
+  const last = JSON.parse(fs.readFileSync(DB + "/pages/transactions/last"))
+  const newObj = {
+    pageIndex: parseInt(page),
+    lastPage: parseInt(last),
+    pageData: pg.list.map(p => {
+      return {
+        index: pg.ids[p].index,
+        id: [p, small_hash(p)],
+        unspentCount: pg.ids[p].unspentCount,
+        spentCount: pg.ids[p].spent.length - pg.ids[p].unspentCount,
+        utxos: pg.ids[p].spent
+      }
+    })
+  }
+  return newObj
+}
+
+export function loadBlocksPage(page) {
+  const pg = JSON.parse(fs.readFileSync(DB + "/pages/blocks/" + page))
+  const last = JSON.parse(fs.readFileSync(DB + "/pages/blocks/last"))
+  const newObj = {
+    pageIndex: parseInt(page),
+    lastPage: parseInt(last),
+    pageData: pg.map(p => {
+      return {
+        height: p.height,
+        id: small_hash(p.id),
+        txCount: p.txCount
+      }
+    })
+  }
+  return newObj
+}
+
+export function loadTransactionsPage(page) {
+  const pg = JSON.parse(fs.readFileSync(DB + "/pages/transactions/" + page))
+  const last = JSON.parse(fs.readFileSync(DB + "/pages/transactions/last"))
+  const newObj = {
+    pageIndex: parseInt(page),
+    lastPage: parseInt(last),
+    pageData: pg.list.map(p => {
+      return {
+        index: pg.ids[p].index,
+        id: [p, small_hash(p)],
+        unspentCount: pg.ids[p].unspentCount,
+        spentCount: pg.ids[p].spent.length - pg.ids[p].unspentCount,
+        utxos: pg.ids[p].spent
+      }
+    })
+  }
+  return newObj
 }
