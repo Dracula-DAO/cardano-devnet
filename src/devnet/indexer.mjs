@@ -257,6 +257,7 @@ class DBWriter {
       spent: tx.outputs.map(() => { return false })
     }
     fs.writeFileSync(this.db + "/pages/transactions/" + page, JSON.stringify(pageObj, null, 2))
+    fs.writeFileSync(this.db + "/pages/transactions/last", JSON.stringify(page))
   }
 
   produce(utxo) {
