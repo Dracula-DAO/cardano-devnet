@@ -116,12 +116,14 @@ class DBWriter {
         lovelace: GENESIS_FAUCET_LOVELACE
       }
     }, null, 2))
+    fs.writeFileSync(genesis_address_path + "/unspent", JSON.stringify([
+      GENESIS_FAUCET_HASH + "#0"
+    ], null, 2))
     fs.writeFileSync(genesis_address_path + "/alias", "faucet")
     fs.mkdirSync(this.db + "/tokens/ada/lovelace", { recursive: true })
     const adaLedger = {}
     adaLedger[ADDR_FAUCET] = GENESIS_FAUCET_LOVELACE
     fs.writeFileSync(this.db + "/tokens/ada/lovelace/ledger", JSON.stringify(adaLedger, null, 2))
-    relative_link(genesis_tx_path + "/outputs/0", genesis_address_path + "/" + GENESIS_FAUCET_HASH + "#0")
     fs.writeFileSync(this.db + "/tokens/ledger", JSON.stringify({
       ada: {
         lovelace: GENESIS_FAUCET_LOVELACE
@@ -200,7 +202,6 @@ class DBWriter {
       const inputUtxoFile = this.db + "/transactions/" + input.transaction.id + "/outputs/" + input.index + "/output"
       const inputUtxo = JSON.parse(fs.readFileSync(inputUtxoFile))
       this.consume(inputUtxo)
-      fs.unlinkSync(this.db + "/addresses/" + inputUtxo.address + "/" + input.transaction.id + "#" + input.index)
       if (redeemers[index] !== undefined) {
         inputUtxo.redeemer = redeemers[index]
       }
@@ -219,6 +220,15 @@ class DBWriter {
         })
       }
       fs.writeFileSync(this.db + "/addresses/" + inputUtxo.address + "/history", JSON.stringify(history, null, 2))
+      const unspent = JSON.parse(fs.readFileSync(this.db + "/addresses/" + inputUtxo.address + "/unspent"))
+      fs.writeFileSync(this.db + "/addresses/" + inputUtxo.address + "/unspent", JSON.stringify(
+        unspent.filter(unsp => {
+          if (unsp === input.transaction.id + "#" + input.index) {
+            return false
+          }
+          return true
+        })
+      ), null, 2)
 
       // update output status
       inputUtxo.spentBy = tx.id
@@ -237,12 +247,16 @@ class DBWriter {
     tx.outputs.forEach((output, index) => {
       fs.mkdirSync(this.db + "/transactions/" + tx.id + "/outputs/" + index)
       fs.writeFileSync(this.db + "/transactions/" + tx.id + "/outputs/" + index + "/output", JSON.stringify(output, null, 2))
+      let unspent = []
       try {
         fs.mkdirSync(this.db + "/addresses/" + output.address)
       } catch (alreadyExists) {}
+      try {
+        unspent = JSON.parse(fs.readFileSync(this.db + "/addresses/" + output.address + "/unspent"))
+      } catch (fileNotFound) {}
       this.produce(output)
-      relative_link(this.db + "/transactions/" + tx.id + "/outputs/" + index + "/output", 
-        this.db + "/addresses/" + output.address + "/" + tx.id + "#" + index)
+      unspent.push(tx.id + "#" + index)
+      fs.writeFileSync(this.db + "/addresses/" + output.address + "/unspent", JSON.stringify(unspent, null, 2))
     })
     
     // Update pages

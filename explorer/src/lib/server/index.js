@@ -208,6 +208,10 @@ export function loadAddress(addr) {
   try {
     history = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/history"))
   } catch (fileNotFound) {} 
+  let unspent = []
+  try {
+    unspent = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/unspent"))
+  } catch (fileNotFound) {}
   const obj = {
     address: [addr, small_addr(addr)],
     alias: alias,
@@ -216,6 +220,13 @@ export function loadAddress(addr) {
       return {
         block: h.block,
         id: [h.id, small_hash(h.id)]
+      }
+    }),
+    unspent: unspent.map(u => {
+      const sp = u.split("#")
+      return {
+        id: [sp[0], small_hash(sp[0])],
+        ref: sp[1]
       }
     })
   }

@@ -18,7 +18,7 @@
           <thead>
             <tr>
               <td>Address</td>
-              <td>Alias(?)</td>
+              <td>Alias</td>
               <td>Amount</td>
             </tr>
           </thead>
@@ -26,7 +26,7 @@
             {#each token.ledger as addr}
               <tr>
                 <td><a class="btn color-address shadow-xl" href="/address/{addr.address[0]}">{ addr.address[1] }</a></td>
-                <td>{#if addr.alias !== undefined}<a href="/address/{addr.address[0]}">{addr.alias}</a>{/if}</td>
+                <td>{#if addr.alias !== undefined}<a href="/address/{addr.address[0]}">{addr.alias}</a>{:else}--{/if}</td>
                 <td>{ addr.amount }</td>
               </tr>
             {/each}
