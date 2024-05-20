@@ -56,6 +56,18 @@
         </table>
       </td>
     </tr>
+    {#if addr.unspent.length > 0}
+      <tr>
+        <td>Unspent UTxOs</td>
+        <td>
+          <div class="flex flex-wrap">
+            {#each addr.unspent as utxo}
+              <a class="btn color-unspent-utxo mr-2 shadow-xl" href="/utxo/{utxo.id[0]}/{utxo.ref}">{utxo.id[1]}#{utxo.ref}</a>
+            {/each}
+          </div>
+        </td>
+      </tr>
+    {/if}
     {#if addr.history.length > 0}
       <tr>
         <td>Transaction History</td>
