@@ -9,7 +9,9 @@
       <td>
         <div class="flex items-center gap-4">
           <div>{utxo.hash[0]}#{utxo.ref}</div>
-          <div class="btn" use:copy={utxo.hash[0] + "#" + utxo.ref}>copy</div>
+          {#if utxo.spentBy === "unspent"}
+            <div class="btn" use:copy={utxo.hash[0] + "#" + utxo.ref}>copy</div>
+          {/if}
         </div>
       </td>
     </tr>
