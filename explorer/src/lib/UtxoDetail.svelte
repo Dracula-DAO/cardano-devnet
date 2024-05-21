@@ -1,14 +1,15 @@
 <script>
   export let utxo
+  import { copy } from "svelte-copy"
 </script>
 <table class="card border-separate border-spacing-4 shadow-lg">
   <tbody>
     <tr>
       <td>ID</td>
       <td>
-        <div class="flex gap-4">
-          <div>Tx {utxo.hash[0]}</div>
-          <div>Output #{utxo.ref}</div>
+        <div class="flex items-center gap-4">
+          <div>{utxo.hash[0]}#{utxo.ref}</div>
+          <div class="btn" use:copy={utxo.hash[0] + "#" + utxo.ref}>copy</div>
         </div>
       </td>
     </tr>

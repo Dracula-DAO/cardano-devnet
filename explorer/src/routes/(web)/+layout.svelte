@@ -16,7 +16,6 @@
     }
     getNextBlock()
   }
-
 </script>
 <div class="flex flex-col">
   <div class="flex justify-center pb-4">
