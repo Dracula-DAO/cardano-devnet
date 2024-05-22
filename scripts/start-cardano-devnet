@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
-while getopts "iem" opt; do
+while getopts "mie" opt; do
     case $opt in
+        m)
+            START_MONITOR=true
+            ;;
         i)
             START_INDEXER=true
             ;;
         e)
             START_EXPLORER=true
-            ;;
-        m)
-            START_MONITOR=true
             ;;
         \?)
             echo "Invalid option -$OPTARG"
@@ -23,7 +23,7 @@ shift $((OPTIND-1))
 
 if [[ ! $1 == ?(-)+([0-9]) ]]; then
   SCRIPTNAME=$(basename $0)
-  echo "usage: $SCRIPTNAME [-i] [-e] [-m] <block time>"
+  echo "usage: $SCRIPTNAME [-m] [-i] [-e] <block time>"
   echo "  -m  run terminal monitor"
   echo "  -i  run indexer"
   echo "  -e  run explorer"
