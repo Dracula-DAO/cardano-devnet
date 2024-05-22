@@ -24,9 +24,9 @@ shift $((OPTIND-1))
 if [[ ! $1 == ?(-)+([0-9]) ]]; then
   SCRIPTNAME=$(basename $0)
   echo "usage: $SCRIPTNAME [-i] [-e] [-m] <block time>"
+  echo "  -m  run terminal monitor"
   echo "  -i  run indexer"
   echo "  -e  run explorer"
-  echo "  -m  run terminal monitor"
   exit -1
 fi
 
