@@ -64,7 +64,7 @@ mkdir -p "$RUNTIMEDIR/db"
 mkdir -p "$RUNTIMEDIR/ipc"
 
 # Set up devnet
-$DEVNET_ROOT/scripts/devnet $1 
+$DEVNET_ROOT/scripts/setup-devnet $1 
 
 # Set up signing pipeline for cardano-cli
 mkfifo $RUNTIMEDIR/tx.draft

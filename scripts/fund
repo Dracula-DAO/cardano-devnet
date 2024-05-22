@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+node $DEVNET_ROOT/src/devnet/fund.mjs $1 $2
+# wait for cardano-node to index mempool internally
+sleep 1
+
