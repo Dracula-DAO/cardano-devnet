@@ -1,6 +1,8 @@
+import fs from 'fs'
+
 import { Data, Lucid, fromText } from 'lucid-cardano'
 import { LucidProviderFrontend } from '../../lucid-frontend.mjs'
-import { loadJambhalaAddress, loadJambhalaPrivKey, loadJambhalaNativeScript } from '../../jambhala-utils.mjs'
+import { loadAddress, loadPrivateKey } from '../../key-utils.mjs'
 
 // This schema must match the state type for the validator script
 // See jambhala/StateProgression.hs for the state type
@@ -16,16 +18,22 @@ const main = async () => {
   await provider.init()
   const lucid = await Lucid.new(provider, "Custom")
 
-  lucid.selectWalletFromPrivateKey(loadJambhalaPrivKey("owner"))
+  lucid.selectWalletFromPrivateKey(loadPrivateKey("owner"))
 
   // Get the state token policyId + name
-  const script = loadJambhalaNativeScript("state-token")
+  const script = JSON.parse(fs.readFileSync("state-token.script"))
   const mintingPolicy = lucid.utils.nativeScriptFromJson(script)
   const policyId = lucid.utils.mintingPolicyToId(mintingPolicy)
   const unit = policyId + fromText("stateToken")
 
   // Get the script address
-  const scriptAddr = loadJambhalaAddress("state-progression")
+  const counterScript = JSON.parse(fs.readFileSync("aiken/plutus.json"))
+  const validator = {
+    type: "PlutusV2",
+    script: counterScript.validators[0].compiledCode
+  }
+  const scriptAddr = lucid.utils.validatorToAddress(validator)
+  console.log("Script address=" + scriptAddr)
 
   // Serialize the counter = 0 state to CBOR
   const datum = Data.to(zeroState, CounterSchema)

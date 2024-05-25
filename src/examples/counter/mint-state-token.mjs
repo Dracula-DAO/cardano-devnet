@@ -1,6 +1,8 @@
+import fs from 'fs'
+
 import { Lucid, fromText } from 'lucid-cardano'
 import { LucidProviderFrontend } from '../../lucid-frontend.mjs'
-import { loadJambhalaNativeScript, loadJambhalaPrivKey } from '../../jambhala-utils.mjs'
+import { loadAddress, loadPrivateKey } from '../../key-utils.mjs'
 
 const main = async () => {
   const provider = new LucidProviderFrontend("ws://localhost:1338")
@@ -8,10 +10,10 @@ const main = async () => {
   const lucid = await Lucid.new(provider, "Custom")
 
   // Mint an NFT "state token"
-  lucid.selectWalletFromPrivateKey(loadJambhalaPrivKey("owner"))
+  lucid.selectWalletFromPrivateKey(loadPrivateKey("owner"))
 
   // Get the state token policyId + name
-  const script = loadJambhalaNativeScript("state-token")
+  const script = JSON.parse(fs.readFileSync("state-token.script"))
   const mintingPolicy = lucid.utils.nativeScriptFromJson(script)
   const policyId = lucid.utils.mintingPolicyToId(mintingPolicy)
   console.log("Policy ID: " + policyId)
