@@ -1,6 +1,6 @@
-import { Data, Lucid, fromText } from 'lucid-cardano'
+import { Data, Lucid, fromText, applyParamsToScript } from 'lucid-cardano'
 import { LucidProviderFrontend } from '../../lucid-frontend.mjs'
-import { loadJambhalaPrivKey, loadJambhalaNativeScript, loadJambhalaPlutusScript } from '../../jambhala-utils.mjs'
+import { loadPrivateKey } from '../../key-utils.mjs'
 
 process.on('uncaughtException', err => {
   console.log('Caught exception: ' + err)
@@ -13,7 +13,7 @@ const CounterSchema = Data.Object({
 
 const main = async () => {
   if (process.argv.length !== 4) {
-    console.log("Usage: node <script> <wallet_name> <sleep_delay (ms)>")
+    console.log("Usage: node random-increment.mjs <wallet_name> <sleep_delay (ms)>")
     process.exit()
   }
 
@@ -23,24 +23,27 @@ const main = async () => {
 
   const wallet_name = process.argv[2]
   console.log("Using wallet: " + wallet_name)
-  lucid.selectWalletFromPrivateKey(loadJambhalaPrivKey(wallet_name))
+  lucid.selectWalletFromPrivateKey(loadPrivateKey(wallet_name))
 
   const sleep_delay = parseInt(process.argv[3], 10)
   console.log("Using sleep_delay: " + sleep_delay)
 
   // Get the state token policyId + name
-  const script = loadJambhalaNativeScript("state-token")
+  const script = JSON.parse(fs.readFileSync("state-token.script"))
   const mintingPolicy = lucid.utils.nativeScriptFromJson(script)
   const policyId = lucid.utils.mintingPolicyToId(mintingPolicy)
-  const unit = policyId + fromText("stateToken")
+  const unit = policyId + fromText("counter-token")
 
   // Load the script and compute the script address from it
-  const validator = loadJambhalaPlutusScript("state-progression")
-  const stateProgressionScript = {
+  const counterScript = JSON.parse(fs.readFileSync("aiken/plutus.json"))
+  const validator = {
     type: "PlutusV2",
-    script: validator.cborHex
+    script: applyParamsToScript(counterScript.validators[0].compiledCode, [
+      policyId, fromText("counter-token")
+    ])
   }
-  const scriptAddr = lucid.utils.validatorToAddress(stateProgressionScript)
+  const scriptAddr = lucid.utils.validatorToAddress(validator)
+  console.log("Script address=" + scriptAddr)
 
   const iterate = delay => {
     setTimeout(async () => {
@@ -66,7 +69,7 @@ const main = async () => {
 
       const tx = await lucid.newTx()
         .collectFrom([stateUtxo], Data.void()) // no redeemer
-        .attachSpendingValidator(stateProgressionScript)
+        .attachSpendingValidator(validator)
         .payToContract(scriptAddr, { inline: Data.to(state, CounterSchema) }, { [unit]: 1n })
         .complete()
 

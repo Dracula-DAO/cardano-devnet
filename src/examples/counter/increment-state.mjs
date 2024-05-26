@@ -1,6 +1,6 @@
 import fs from 'fs'
 
-import { Data, Lucid, fromText } from 'lucid-cardano'
+import { Data, Lucid, fromText, applyParamsToScript } from 'lucid-cardano'
 import { LucidProviderFrontend } from '../../lucid-frontend.mjs'
 import { loadPrivateKey } from '../../key-utils.mjs'
 
@@ -27,13 +27,15 @@ const main = async () => {
   const script = JSON.parse(fs.readFileSync("state-token.script"))
   const mintingPolicy = lucid.utils.nativeScriptFromJson(script)
   const policyId = lucid.utils.mintingPolicyToId(mintingPolicy)
-  const unit = policyId + fromText("stateToken")
+  const unit = policyId + fromText("counter-token")
 
   // Load the script and compute the script address from it
   const counterScript = JSON.parse(fs.readFileSync("aiken/plutus.json"))
   const validator = {
     type: "PlutusV2",
-    script: counterScript.validators[0].compiledCode
+    script: applyParamsToScript(counterScript.validators[0].compiledCode, [
+      policyId, fromText("counter-token")
+    ])
   }
   const scriptAddr = lucid.utils.validatorToAddress(validator)
   console.log("Script address=" + scriptAddr)
