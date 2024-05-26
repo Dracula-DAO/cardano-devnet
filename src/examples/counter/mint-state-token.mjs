@@ -17,7 +17,7 @@ const main = async () => {
   const mintingPolicy = lucid.utils.nativeScriptFromJson(script)
   const policyId = lucid.utils.mintingPolicyToId(mintingPolicy)
   console.log("Policy ID: " + policyId)
-  const unit = policyId + fromText("stateToken")
+  const unit = policyId + fromText("counter-token")
   console.log("Minting state token: " + unit)
 
   try {
