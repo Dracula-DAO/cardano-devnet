@@ -4,10 +4,10 @@
 <div class="card-title">Transactions page {data.pageIndex}</div>
 <div class="flex justify-center mb-8">
   {#if data.pageIndex > 0}
-    <a class="btn mr-2 shadow-xl" href="/pages/blocks/{data.pageIndex-1}">Prev Page</a>
+    <a class="btn mr-2 shadow-xl" href="/pages/transactions/{data.pageIndex-1}">Prev Page</a>
   {/if}
   {#if data.pageIndex < data.lastPage}
-    <a class="btn shadow-xl" href="/pages/blocks/{data.pageIndex+1}">Next Page</a>
+    <a class="btn shadow-xl" href="/pages/transactions/{data.pageIndex+1}">Next Page</a>
   {/if}
 </div>
 <div>
