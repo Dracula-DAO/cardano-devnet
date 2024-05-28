@@ -4,6 +4,12 @@
 <table class="card border-separate border-spacing-4 shadow-lg">
   <tbody>
     <tr>
+      <td></td>
+      <td>
+        <img class="token" src="/{token.logo}" alt="{token.name}"/>
+      </td>
+    </tr>
+    <tr>
       <td>Policy ID</td>
       <td>{ token.policy }</td>
     </tr>
