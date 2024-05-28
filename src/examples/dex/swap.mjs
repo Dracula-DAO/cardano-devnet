@@ -49,7 +49,6 @@ const main = async () => {
   }])
   const inA = BigInt(inUtxo.assets[tradingPolicyId + tokenAName])
   const inB = BigInt(inUtxo.assets[tradingPolicyId + tokenBName])
-  console.log(JSON.stringify(inUtxo, null, 2))
 
   let final_token_a = 0
   let final_token_b = 0
