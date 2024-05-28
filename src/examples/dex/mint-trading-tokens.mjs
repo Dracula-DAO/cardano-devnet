@@ -1,10 +1,10 @@
 import { Lucid, fromText } from 'lucid-cardano'
 import { LucidProviderFrontend } from '../../lucid-frontend.mjs'
-import { loadJambhalaNativeScript, loadJambhalaPrivKey } from '../../jambhala-utils.mjs'
+import { loadPrivateKey } from '../../key-utils.mjs'
 
 const main = async () => {
   if (process.argv.length !== 5) {
-    console.log("Usage: node <script> <wallet_name> <token A amount> <token B amount>")
+    console.log("Usage: node mint-trading-tokens.mjs <wallet_name> <token A amount> <token B amount>")
     process.exit()
   }
 
@@ -20,22 +20,22 @@ const main = async () => {
   const lucid = await Lucid.new(provider, "Custom")
 
   // Mint an NFT "state token"
-  lucid.selectWalletFromPrivateKey(loadJambhalaPrivKey(wallet_name))
+  lucid.selectWalletFromPrivateKey(loadPrivateKey(wallet_name))
 
   // Get the state token policyId + name
-  const script = loadJambhalaNativeScript("trading-token")
+  const script = JSON.parse(fs.readFileSync("trading-token.script"))
   const mintingPolicy = lucid.utils.nativeScriptFromJson(script)
   const policyId = lucid.utils.mintingPolicyToId(mintingPolicy)
   console.log("Policy ID: " + policyId)
-  const tokenA = policyId + fromText("TokenA")
-  const tokenB = policyId + fromText("TokenB")
+  const tokenAName = fromText("TokenA")
+  const tokenBName = fromText("TokenB")
 
   try {
 
     const tx = await lucid.newTx()
       .mintAssets({
-        [tokenA]: BigInt(amount_token_a),
-        [tokenB]: BigInt(amount_token_b)
+        [policyId + tokenAName]: BigInt(amount_token_a),
+        [policyId + tokenBName]: BigInt(amount_token_b)
       })
       .attachMintingPolicy(mintingPolicy)
       .complete()
