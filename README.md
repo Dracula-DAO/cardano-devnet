@@ -52,6 +52,10 @@ $ cat db/transactions/41a818da0864ba9f4552af75c943b564870db652c99ea1e31d90e2745e
 
 * Lucid provider - a lucid provider that connects the client-side lucid api to the node backend. This is a direct replacement for the lucid blockfrost provider when using the preprod or mainnet networks. Allows developers to send transactions directly from javascript.
 
+## Installation
+
+Follow the instructions in [INSTALL.md](INSTALL.md).
+
 ## Examples
 
 In the examples directory, there are several examples of passing state through a sequence of transactions that demonstrate how multiple cardano transactions can be chained to pass a script state from one transaction to the next without requiring the previous transaction to be included in a block. The so-called [cardano eutxo bottleneck](https://builtoncardano.com/blog/concurrency-and-cardano-a-problem-a-challenge-or-nothing-to-worry-about) of one transaction per script address per block does not exist, provided there is a way to query the blockchain mempool.
