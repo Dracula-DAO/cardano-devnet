@@ -1,124 +1,45 @@
 # How to run the State Counter example
 
-## Step 1 - Compile the plutus script
+## Step 1 - Compile the aiken smart contract
 
-### 1.a - copy haskell source into Jambhala framework
-
-```
-$ cp jambhala/StateProgression.hs $PROJECT_ROOT/src/Contracts
-$ cd $PROJECT_ROOT/src/Contracts
-$ git add StateProgression.hs
-```
-
-### 1.b - add StateProgression into the contracts variable
+This example requires [aiken](https://aiken-lang.org/installation-instructions) >= v1.0.28 and it assumes that
+CARDANO_CLI_GURU has been coupled to cardano-devnet as described in the install instructions.
 
 ```
-contracts =
-  [ StateProgression.stateExports
-  ]
+$ cd aiken
+$ aiken build
+$ cd ..
 ```
 
-### 1.c - compile
+This should create a "plutus.json" file in the aiken directory. This contains the smart contract bytecode.
+
+## Step 2 - Ensure the devnet is running
+
+In a separate window:
 
 ```
-$ cd $PROJECT_ROOT
-$ jamb -w
+$ start-cardano-devnet -mie 5
 ```
 
-## Step 2 - Create a state token
+The -m (monitor) needs to be running because it contains the Lucid backend provider that gives visibility into the
+mempool and pending tx's.
 
-### 2.a - create an "owner", "alice" and "bob" key pair
-
-```
-$ cd $PROJECT_ROOT
-$ key-gen owner
-$ key-hash owner
-49899a30b5ff65781291e329b2c3cae3b917973c2d60527af8ec63f5
-$ key-gen alice
-$ key-gen bob
-```
-
-### 2.b - create the native script
-
-Create a native script named "state-token.script" in $NATIVE_SCRIPTS_PATH. Use the key hash generated above in the file.
+## Step 3 - Run the setup
 
 ```
-{
-  "type": "all",
-  "scripts": [
-    { 
-      "type": "sig", 
-      "keyHash": "49899a30b5ff65781291e329b2c3cae3b917973c2d60527af8ec63f5"
-    }
-  ]
-}
+$ ./setup.sh
 ```
 
-### Step 3 - Run the demo
+You'll be able to observe transactions go into the mempool and become confirmed in the monitor window.
 
-### 3.a - ensure the devnet and monitor are running
-
-In separate terminals, run the cardano devnet and monitor script
-
-Terminal 1 - run the devnet with 10 second average block time
-```
-$ devnet 10
-```
-
-Terminal 2 - run the monitor
-```
-$ monitor
-```
-
-### 3.b - fund the owner, alice and bob accounts
+## Step 4 - Increment the contract state
 
 ```
-$ utxos faucet
-8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284     0        900000000000 lovelace + TxOutDatumNone
-
-$ transfer faucet owner 10 8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284#0
+$ node increment.mjs alice
 ```
 
-( ... wait for block to confirm ... )
+If you look at the output utxo you can observe that the CBOR datum shows the counter has been incremented.
 
-```
-$ utxos faucet
-47338ba44676dae0ee64b86f04c9dedc99bc29ca9e13ceb04d4a3d84d464d53f     1        899989834455 lovelace + TxOutDatumNone
-
-$ transfer faucet alice 1000 47338ba44676dae0ee64b86f04c9dedc99bc29ca9e13ceb04d4a3d84d464d53f#1
-```
-
-( ... wait for block to confirm ... )
-
-```
-$ utxos faucet
-8d880bda5dab081d4ba436c7ce82fe6b02c9400477a832d633ecab036a3c46c2     1        898989668910 lovelace + TxOutDatumNone
-
-$ transfer faucet bob 1000 8d880bda5dab081d4ba436c7ce82fe6b02c9400477a832d633ecab036a3c46c2#1
-```
-
-### 3.c - mint the state token NFT
-
-The state token NFT gets passed from transaction to transaction to track the latest state.
-
-```
-$ node mint-state-token.mjs
-```
-
-### 3.d - seed the state with zero
-
-```
-$ node seed-state.mjs
-```
-
-### 3.e - increment the state token from alice and bob wallets
-
-```
-$ node increment-state.mjs alice
-$ node increment-state.mjs bob
-```
-
-Note that you don't have to wait for a block to confirm before incrementing the state! This is because you're using the devnet indexer that passes mempool transactions back to Lucid automatically behind the scenes.
 
 
 
