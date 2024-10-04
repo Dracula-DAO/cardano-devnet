@@ -123,25 +123,25 @@ echo "#"
 echo "# build / sign / submit in reverse order because pipes need to have listeners before you"
 echo "# can write to them. (tx.draft and tx.signed are fifos)"
 echo "#"
-echo $CARDANO_CLI transaction submit \
+echo $CARDANO_CLI conway transaction submit \
   --tx-file "$CARDANO_CLI_RUNTIMEDIR/tx.signed" 
-$CARDANO_CLI transaction submit \
+$CARDANO_CLI conway transaction submit \
   --tx-file "$CARDANO_CLI_RUNTIMEDIR/tx.signed" &
 sleep 1
-echo $CARDANO_CLI transaction sign \
+echo $CARDANO_CLI conway transaction sign \
   --tx-body-file "$CARDANO_CLI_RUNTIMEDIR/tx.draft" \
   --signing-key-file "$CARDANO_CLI_KEYS_PATH/faucet.skey" \
   --out-file "$CARDANO_CLI_RUNTIMEDIR/tx.signed"
-$CARDANO_CLI transaction sign \
+$CARDANO_CLI conway transaction sign \
   --tx-body-file "$CARDANO_CLI_RUNTIMEDIR/tx.draft" \
   --signing-key-file "$CARDANO_CLI_KEYS_PATH/faucet.skey" \
   --out-file "$CARDANO_CLI_RUNTIMEDIR/tx.signed" &
 sleep 1
-echo $CARDANO_CLI transaction build \
+echo $CARDANO_CLI conway transaction build \
   --tx-in 8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284#0 \
   --change-address addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv \
   --out-file "$CARDANO_CLI_RUNTIMEDIR/tx.draft"
-$CARDANO_CLI transaction build \
+$CARDANO_CLI conway transaction build \
   --tx-in 8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284#0 \
   --change-address addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv \
   --out-file "$CARDANO_CLI_RUNTIMEDIR/tx.draft"
