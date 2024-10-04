@@ -10,7 +10,7 @@ services:
       #- ${CARDANO_ASSETS_PATH}:/assets
 
   cardano-cli:
-    image: cardanosolutions/cardano-node-ogmios:latest
+    image: cardanosolutions/cardano-node-ogmios:v6.8.0_9.2.0
     user: $MY_UID:$MY_GID
     entrypoint: /usr/local/bin/cardano-cli
     volumes:
@@ -21,7 +21,7 @@ services:
       - CARDANO_NODE_NETWORK_ID=42
 
   cardano-node:
-    image: cardanosolutions/cardano-node-ogmios:latest
+    image: cardanosolutions/cardano-node-ogmios:v6.8.0_9.2.0
     user: $MY_UID:$MY_GID
     entrypoint: /usr/local/bin/cardano-node
     environment:
@@ -42,7 +42,7 @@ services:
     restart: on-failure
 
   ogmios:
-    image: cardanosolutions/cardano-node-ogmios:latest
+    image: cardanosolutions/cardano-node-ogmios:v6.8.0_9.2.0
     user: $MY_UID:$MY_GID
     entrypoint: /bin/ogmios
     restart: on-failure
@@ -55,4 +55,8 @@ services:
       - ${DEVNET_ROOT}/runtime:/runtime
     ports:
       - ${OGMIOS_PORT:-1337}:1337
+
+  hydra-node:
+    image: ghcr.io/cardano-scaling/hydra-node:latest
+    user: $MY_UID:$MY_GID
 
