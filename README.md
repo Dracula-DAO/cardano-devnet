@@ -1,3 +1,5 @@
+As of the 2024 Chang hard fork, **Dracula DAO** is a sponsor of cardano-devnet development. To support this project, consider staking at [Vampyre Fund SPO](https://vampyre.fund), a single pool operator on the Cardano network with reliable uptime since 2020.
+
 # Cardano Devnet
 
 This repository enables anyone to create a completely local cardano development network that runs only on the development machine, with average block times that can be specified as a number of seconds, assignable from the command line.  This is useful if you want to experiment privately and locally, with an unlimited amount of tokens, without requiring network connectivity, and be able to discard the chain state once you're done with it.
