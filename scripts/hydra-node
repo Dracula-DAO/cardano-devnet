@@ -27,6 +27,8 @@ for i in "${@:1}"; do
   newargs+=("${tmp}")
 done
 
+#echo "${newargs[*]}"
+
 if [ -z ${hydrapath+x} ]; then
   # hydra-node not in PATH external to this directory
   docker compose -f $DEVNET_ROOT/docker-compose.yml run --rm -T hydra-node "${newargs[@]}"

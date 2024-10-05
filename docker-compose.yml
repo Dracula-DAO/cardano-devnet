@@ -14,8 +14,10 @@ services:
     user: $MY_UID:$MY_GID
     entrypoint: /usr/local/bin/cardano-cli
     volumes:
+      - ${PWD}:/work
       - ${DEVNET_ROOT}/runtime:/runtime
       - ${CARDANO_ASSETS_PATH}:/assets
+    working_dir: /work
     environment:
       - CARDANO_NODE_SOCKET_PATH=/runtime/ipc/node.socket
       - CARDANO_NODE_NETWORK_ID=42
@@ -64,5 +66,12 @@ services:
     image: ghcr.io/cardano-scaling/hydra-node:latest
     user: $MY_UID:$MY_GID
     volumes:
+      - ${PWD}:/work
+      - ${DEVNET_ROOT}/runtime:/runtime
       - ${DEVNET_ROOT}/hydra:/hydra
+      - ${CARDANO_ASSETS_PATH}:/assets
+    working_dir: /work
+    environment:
+      - CARDANO_NODE_SOCKET_PATH=/runtime/ipc/node.socket
+      - CARDANO_NODE_NETWORK_ID=42
 
