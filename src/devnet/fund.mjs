@@ -16,7 +16,12 @@ const main = async () => {
   const privKey = C.PrivateKey.from_normal_bytes(decoded)
   lucid.selectWalletFromPrivateKey(privKey.to_bech32())
 
-  const toAddr = fs.readFileSync(process.env.ADDR_PATH + "/" + wallet_name + ".addr").toString()
+  let toAddr
+  if (wallet_name.startsWith("addr")) {
+    toAddr = wallet_name
+  } else {
+    toAddr = fs.readFileSync(process.env.ADDR_PATH + "/" + wallet_name + ".addr").toString()
+  }
   const tx = await lucid.newTx()
     .payToAddress(toAddr, { lovelace: value })
     .complete();
