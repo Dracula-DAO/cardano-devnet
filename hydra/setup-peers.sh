@@ -6,6 +6,8 @@ rm -rf $HYDRA_ROOT/network/node-*
 peers=$HYDRA_ROOT/network/peers
 rm -f $peers
 
+cp $HYDRA_ROOT/protocol-parameters.json $HYDRA_ROOT/network
+
 count=10
 for name in "$@"; do
   nodedir="$HYDRA_ROOT/network/node-$name"
