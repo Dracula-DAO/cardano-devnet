@@ -24,6 +24,8 @@ for name in "$@"; do
   cardano-cli address build --verification-key-file ./node.vk --out-file ./node.addr
   hydra-node gen-hydra-key --output-file ./hydra
   fund $(cat ./funds.addr) 1000
+  # fund node twice so 1 utxo can be committed, the other pays gas
+  fund $(cat ./node.addr) 100
   fund $(cat ./node.addr) 100
   cd - > /dev/null
 
