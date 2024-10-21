@@ -1,3 +1,11 @@
+networks:
+  hydranet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/24
+          gateway: 172.16.0.1
+
 services:
   #shell:
     #image: cardanosolutions/cardano-node-ogmios:latest
@@ -70,7 +78,9 @@ services:
       - ${DEVNET_ROOT}/runtime:/runtime
       - ${DEVNET_ROOT}/hydra:/hydra
       - ${CARDANO_ASSETS_PATH}:/assets
-    network_mode: host
+    networks:
+      hydranet:
+        ipv4_address: ${HYDRA_IP}
     working_dir: /work
     environment:
       - CARDANO_NODE_SOCKET_PATH=/runtime/ipc/node.socket
@@ -86,7 +96,8 @@ services:
       - ${DEVNET_ROOT}/runtime:/runtime
       - ${DEVNET_ROOT}/hydra:/hydra
       - ${CARDANO_ASSETS_PATH}:/assets
-    network_mode: host
+    networks:
+      - hydranet
     working_dir: /work
     environment:
       - CARDANO_NODE_SOCKET_PATH=/runtime/ipc/node.socket
