@@ -29,5 +29,5 @@ cmd="hydra-node \
   $peeropts"
 
 exec $cmd > /dev/null 2>&1 &
-hydra-tui -k $PWD/node.sk -c $hydraip:4001
+hydra-tui -k $PWD/node.sk -c $hydraip:4001 --node-socket $DEVNET_ROOT/runtime/ipc/node.socket
 
