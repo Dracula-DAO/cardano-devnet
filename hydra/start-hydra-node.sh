@@ -32,9 +32,12 @@ exec $cmd > /dev/null 2>&1 &
 hydrapid=$!
 
 function clean_up {
-  echo "Cleaning up hydra-node PID=$hydrapid"
+  still_running=$(ps -o pid= -p $hydrapid)
+  if [ -n "$still_running" ]; then
+    echo "Cleaning up hydra-node PID=$hydrapid"
+    kill $hydrapid
+  fi
   echo "Goodbye!"
-  kill $hydrapid
   kill -term $$
 }
 
