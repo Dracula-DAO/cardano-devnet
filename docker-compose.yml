@@ -32,6 +32,7 @@ services:
 
   cardano-node:
     image: cardanosolutions/cardano-node-ogmios:v6.8.0_9.2.0
+    container_name: devnet-cardano-node
     user: $MY_UID:$MY_GID
     entrypoint: /usr/local/bin/cardano-node
     environment:
@@ -57,6 +58,7 @@ services:
 
   ogmios:
     image: cardanosolutions/cardano-node-ogmios:v6.8.0_9.2.0
+    container_name: devnet-ogmios
     user: $MY_UID:$MY_GID
     entrypoint: /bin/ogmios
     restart: on-failure

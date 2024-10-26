@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 name=$1
 cd "$HYDRA_ROOT/network/node-$name"
 
 # Remove any old persistence data
-PERSISTENCE_DIR=./persistence
+PERSISTENCE_DIR=$PWD/persistence
 rm -rf $PERSISTENCE_DIR
 mkdir $PERSISTENCE_DIR
 
@@ -16,6 +16,8 @@ export HYDRA_IP=$hydraip
 cmd="hydra-node \
   --node-id $name-node \
   --persistence-dir $PERSISTENCE_DIR \
+  --cardano-signing-key $PWD/node.sk \
+  --hydra-signing-key $PWD/hydra.sk \
   --hydra-scripts-tx-id $(cat $HYDRA_ROOT/network/scripts-utxo.txt) \
   --ledger-protocol-parameters $HYDRA_ROOT/network/protocol-parameters.json \
   --testnet-magic 42 \
@@ -24,10 +26,19 @@ cmd="hydra-node \
   --api-port 4001 \
   --host 0.0.0.0 \
   --port 5001 \
-  --cardano-signing-key ./node.sk \
-  --hydra-signing-key ./hydra.sk \
   $peeropts"
 
 exec $cmd > /dev/null 2>&1 &
-hydra-tui -k $PWD/node.sk -c $hydraip:4001 --node-socket $DEVNET_ROOT/runtime/ipc/node.socket
+hydrapid=$!
+
+function clean_up {
+  echo "Cleaning up hydra-node PID=$hydrapid"
+  echo "Goodbye!"
+  kill $hydrapid
+  kill -term $$
+}
+
+trap clean_up EXIT
+
+hydra-tui -k $PWD/funds.sk -c $hydraip:4001 --node-socket $DEVNET_ROOT/runtime/ipc/node.socket
 
