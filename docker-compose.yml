@@ -72,6 +72,17 @@ services:
     ports:
       - ${OGMIOS_PORT:-1337}:1337
 
+  cardano-hw-cli:
+    image: cardano-devnet/cardano-hw-cli
+    container_name: devnet-hw-cli
+    user: $MY_UID:$MY_GID
+    entrypoint: /usr/bin/cardano-hw-cli
+    volumes:
+      - ${PWD}:/work
+    devices:
+      - /dev/bus/usb/003/025:/dev/bus/usb/003/025
+    working_dir: /work
+
   hydra-node:
     image: ghcr.io/cardano-scaling/hydra-node:latest
     user: $MY_UID:$MY_GID

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+newargs=()
+for i in "${@:1}"; do
+  tmp=$i
+  if [[ $i == ${DEVNET_ROOT}* ]]; then
+    tmp=("${i#$DEVNET_ROOT}")
+  fi
+  newargs+=("${tmp}")
+done
+
+exec docker compose -f $DEVNET_ROOT/docker-compose.yml run --rm -T cardano-hw-cli "${newargs[@]}"
