@@ -79,8 +79,6 @@ services:
     entrypoint: /usr/bin/cardano-hw-cli
     volumes:
       - ${PWD}:/work
-    devices:
-      - /dev/bus/usb/003/025:/dev/bus/usb/003/025
     working_dir: /work
 
   hydra-node:
