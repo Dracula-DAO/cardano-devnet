@@ -54,6 +54,8 @@ services:
     ]
     volumes:
       - ${DEVNET_ROOT}/runtime:/runtime
+    ports:
+      - 12798:12798
     restart: on-failure
 
   ogmios:
