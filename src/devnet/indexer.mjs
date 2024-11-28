@@ -137,24 +137,30 @@ class DBWriter {
       }
     }, null, 2))
 
-    // copy any address names as aliases
-    const addrDir = process.env.CARDANO_CLI_GURU + "/assets/addr"
-    fs.readdir(addrDir, (err, files) => {
-      if (err) {
-        throw new Error(err)
-      }
-      files.forEach(file => {
-        const addr = fs.readFileSync(addrDir + "/" + file)
-        const nameSplit = path.basename(file).split(".")
-        if (nameSplit[1] === "addr") {
-          const addrDB = this.db + "/addresses/" + addr
-          if (!fs.existsSync(addrDB)) {
-            fs.mkdirSync(addrDB)
-          }
-          fs.writeFileSync(addrDB + "/alias", nameSplit[0])
+    // periodically copy any address names as aliases
+    const updateAliases = () => {
+      const addrDir = process.env.CARDANO_CLI_GURU + "/assets/addr"
+      fs.readdir(addrDir, (err, files) => {
+        if (err) {
+          throw new Error(err)
         }
+        files.forEach(file => {
+          const addr = fs.readFileSync(addrDir + "/" + file)
+          const nameSplit = path.basename(file).split(".")
+          if (nameSplit[1] === "addr") {
+            const addrDB = this.db + "/addresses/" + addr
+            if (!fs.existsSync(addrDB)) {
+              fs.mkdirSync(addrDB)
+            }
+            if (!fs.existsSync(addrDB + "/alias")) {
+              fs.writeFileSync(addrDB + "/alias", nameSplit[0])
+            }
+          }
+        })
       })
-    })
+    }
+    updateAliases()
+    setInterval(updateAliases, 60000) // every minute
 
     // Write pages
     const txObj = {
