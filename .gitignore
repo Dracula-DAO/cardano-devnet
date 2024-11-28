@@ -1,5 +1,4 @@
 .env
-assets
 runtime
 node_modules
 package-lock.json
