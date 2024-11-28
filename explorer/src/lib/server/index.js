@@ -1,6 +1,7 @@
 import fs from 'fs'
 
 const DB=process.env.DEVNET_ROOT + "/runtime/index"
+const GURU_ASSETS=process.env.CARDANO_CLI_GURU + "/assets"
 
 const logo_lookup = [
   "cardano-ada-logo.svg",
@@ -192,7 +193,10 @@ export function loadUtxo(hash, ref) {
 
 export function loadAddress(addr) {
   const alias = addr_alias(addr)
-  const ledgerValues = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/ledger"))
+  let ledgerValues = []
+  try {
+    ledgerValues = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/ledger"))
+  } catch (fileNotFound) {}
   const metadata = JSON.parse(fs.readFileSync(DB + "/tokens/ledger"))
   const ledger = Object.keys(ledgerValues).reduce((acc, kpolicy) => {
     Object.keys(ledgerValues[kpolicy]).map(ktoken => {
@@ -232,7 +236,11 @@ export function loadAddress(addr) {
       }
     })
   }
-  obj.ada = formatADA(obj.ledger["ada:lovelace"].amount)
+  try {
+    obj.ada = formatADA(obj.ledger["ada:lovelace"].amount)
+  } catch (err) {
+    obj.ada = 0
+  }
   delete obj.ledger["ada:lovelace"]
   obj.hasNativeTokens = Object.keys(obj.ledger).length > 0
   return obj
@@ -303,15 +311,12 @@ export async function search(pattern) {
   throw new Error("Not found: " + pattern)
 }
 
-export function addAlias(addr, alias) {
+export function renameAlias(addr, from, to) {
   try {
-    fs.writeFileSync(DB + "/addresses/" + addr + "/alias", alias)
-  } catch (err) {}
-}
-
-export function deleteAlias(addr) {
-  try {
-    fs.rmSync(DB + "/addresses/" + addr + "/alias")
+    fs.writeFileSync(DB + "/addresses/" + addr + "/alias", to)
+    fs.renameSync(GURU_ASSETS + "/addr/" + from + ".addr", GURU_ASSETS + "/addr/" + to + ".addr")
+    fs.renameSync(GURU_ASSETS + "/keys/" + from + ".skey", GURU_ASSETS + "/keys/" + to + ".skey")
+    fs.renameSync(GURU_ASSETS + "/keys/" + from + ".vkey", GURU_ASSETS + "/keys/" + to + ".vkey")
   } catch (err) {}
 }
 
