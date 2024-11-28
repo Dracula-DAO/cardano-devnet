@@ -22,7 +22,7 @@ for i in "${@:1}"; do
     tmp=("${i#$DEVNET_ROOT}")
   fi
   if [[ $i == ${CARDANO_CLI_GURU}* ]]; then
-    tmp=("${tmp#$CARDANO_CLI_GURU}")
+    tmp=("${i#$CARDANO_CLI_GURU}")
   fi
   newargs+=("${tmp}")
 done

@@ -18,8 +18,13 @@ for name in "$@"; do
   # credentials
   cd $nodedir
   direnv allow
-  cardano-cli address key-gen --verification-key-file ./funds.vk --signing-key-file ./funds.sk
-  cardano-cli address build --verification-key-file ./funds.vk --out-file ./funds.addr
+  if [ ! -f $CARDANO_ASSETS_PATH/keys/$name.skey ]; then
+    key-gen $name
+  fi
+  cp $CARDANO_ASSETS_PATH/keys/$name.vkey ./funds.vk
+  cp $CARDANO_ASSETS_PATH/keys/$name.skey ./funds.sk
+  cp $CARDANO_ASSETS_PATH/addr/$name.addr ./funds.addr
+
   cardano-cli address key-gen --verification-key-file ./node.vk --signing-key-file ./node.sk
   cardano-cli address build --verification-key-file ./node.vk --out-file ./node.addr
   hydra-node gen-hydra-key --output-file ./hydra
