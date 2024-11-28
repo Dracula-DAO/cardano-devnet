@@ -81,7 +81,7 @@ services:
       - ${PWD}:/work
       - ${DEVNET_ROOT}/runtime:/runtime
       - ${DEVNET_ROOT}/hydra:/hydra
-      - ${CARDANO_ASSETS_PATH}:/assets
+      - ${CARDANO_CLI_GURU}/assets:/assets
     networks:
       hydranet:
         ipv4_address: ${HYDRA_IP}
