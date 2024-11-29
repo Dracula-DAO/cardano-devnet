@@ -3,4 +3,4 @@
   url = https://github.com/dohliam/elegant-circles.git
 [submodule "cardano-cli-guru"]
 	path = cardano-cli-guru
-	url = https://github.com/iburzynski/cardano-cli-guru.git
+	url = https://github.com/Dracula-DAO/cardano-cli-guru.git

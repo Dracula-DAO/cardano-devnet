@@ -24,21 +24,10 @@ const LUCID_PORT = 1338
 let currentBlockHash = ""
 let currentSlot = 0
 
-// Load addresses lookups
+// Load address lookups
 const addressLookup = {} // address lookup by name
 const nameLookup = {} // name lookup by address
-const ADDRESSES = process.env.CARDANO_CLI_GURU + "/assets/addr"
-const files = fs.readdirSync(ADDRESSES)
-files.forEach((file, index) => {
-  const name = path.basename(file, '.addr')
-  const ext = path.extname(file)
-  if (ext === ".addr") {
-    const addressFile = path.join(ADDRESSES, file)
-    const addr = fs.readFileSync(addressFile).toString()
-    addressLookup[name] = addr
-    nameLookup[addr] = name
-  }
-})
+const ALIASES = process.env.CARDANO_CLI_GURU + "/assets/alias"
 
 // Used to store indexed transactions by utxo ref. Since this is just a local devnet
 // we're not concerned about the size of this mapping. On a global testnet or the
@@ -237,6 +226,14 @@ class DevnetIndexer {
     const lucidScript = this.ogmiosScriptToLucid(script)
     //log.info("producing: " + utxoRef + " " + addr + " " + JSON.stringify(value))
     if (this.utxos[utxoRef] === undefined) { // only produce once
+      // Check for an alias for this address
+      const alias_path = ALIASES + "/" + addr + ".alias"
+      if (fs.existsSync(alias_path)) {
+        const alias = fs.readFileSync(alias_path)
+        addressLookup[alias] = addr
+        nameLookup[addr] = alias
+      }
+
       this.utxos[utxoRef] = [addr, value, datum, lucidScript]
       if (this.addrs[addr] === undefined) {
         this.addrs[addr] = []

@@ -317,6 +317,7 @@ export function renameAlias(addr, from, to) {
     fs.renameSync(GURU_ASSETS + "/addr/" + from + ".addr", GURU_ASSETS + "/addr/" + to + ".addr")
     fs.renameSync(GURU_ASSETS + "/keys/" + from + ".skey", GURU_ASSETS + "/keys/" + to + ".skey")
     fs.renameSync(GURU_ASSETS + "/keys/" + from + ".vkey", GURU_ASSETS + "/keys/" + to + ".vkey")
+    fs.writeFileSync(GURU_ASSETS + "/alias/" + addr + ".alias", to)
   } catch (err) {}
 }
 
