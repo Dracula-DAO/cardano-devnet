@@ -4,37 +4,19 @@ This repository was developed and tested using Ubuntu Linux. If you are able to 
 
 ## Requirements
 
-In order to run the development network and tools, you need one of the following setups:
+### Docker
 
-### Setup option A
+Install [docker](https://docs.docker.com/engine/install/) and ensure it works for the user you want to run the devnet under. Make sure you have the latest version with the "docker compose" command.
 
-If you want to have control over the versions of cardano-node and / or ogmios you are using, simply install the binaries directly.
+### Direnv
 
-1. Build or download a [cardano-node](https://github.com/IntersectMBO/cardano-node) (>8.9.0) executable and ensure the binary is in your PATH.
-2. Build or download [ogmios](https://github.com/CardanoSolutions/ogmios) (>6.2.0) and ensure the binary is in your PATH.
+Install [direnv](https://direnv.net/) on your system and ensure it works.
 
-### Setup option B
+### NVM + Node JS
 
-If you don't have or don't want to use cardano-node and ogmios binaries, the devnet can be started using standardized docker containers instead.
+Ensure node.js is installed for the user you want to run the devnet under. It is easiest to use [nvm](https://github.com/nvm-sh/nvm) for this. 
 
-1. Install [docker](https://docs.docker.com/engine/install/) and ensure it works for the user you want to run the devnet as. Make sure you have the latest version with the "docker compose" command.
-
-## Installation
-
-1. Clone the repo and allow direnv ([direnv](https://direnv.net/) must be installed on your system). If you have [Cardano CLI Guru](https://github.com/cryptophonic/cardano-cli-guru) installed on your system, this repository supports it, but you need to set the CARDANO_CLI_GURU environment variable to the path of the repository prior to running "direnv allow":
-
-```
-(optional step)
-export CARADANO_CLI_GURU=<path to cardano-cli-guru repo>
-```
-
-```
-$ git clone https://github.com/cryptophonic/cardano-devnet
-$ cd cardano-devnet
-$ direnv allow
-```
-
-2. Ensure node.js is installed for the user you want to run the devnet as. It is easiest to use [nvm](https://github.com/nvm-sh/nvm) for this. Use nvm to install node.js >= 18.xx.yy
+Once nvm is installed, use nvm to install node.js >= 18.xx.yy:
 
 ```
 $ nvm install 18
@@ -43,16 +25,26 @@ $ node --version
 18.xx.yy
 ```
 
-4. Install the node modules for the main repo.
+## Installation
+
+1. Clone the repo
+
+```
+$ git clone https://github.com/cryptophonic/cardano-devnet
+$ cd cardano-devnet
+$ git submodule update --init --recursive
+$ direnv allow
+```
+
+2. Install the node modules for the main repo.
 
 ```
 $ npm install
 ```
    
-5. If you plan on using the web-based explorer, update the repository submodule and install the node modules in the explorer directory.
+3. If you plan on using the web-based explorer, install the node modules in the explorer directory as well.
 
 ```
-$ git submodule update --init --recursive
 $ cd explorer
 $ npm install
 ```
