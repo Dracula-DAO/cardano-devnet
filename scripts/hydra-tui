@@ -33,6 +33,5 @@ if [ -z ${hydrapath+x} ]; then
   # hydra-tui not in PATH external to this directory
   docker compose -f $DEVNET_ROOT/docker-compose.yml run --rm hydra-tui "${newargs[@]}"
 else 
-  echo "hydrapath"
   $hydrapath/hydra-tui "${@:1}"
 fi

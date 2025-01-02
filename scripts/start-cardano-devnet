@@ -176,7 +176,7 @@ function clean_up {
     kill $EXPLORER_PID
   fi
 
-if [ "$DOCKER" == "true" ]; then
+  if [ "$DOCKER" == "true" ]; then
     docker compose down
   else
     echo "Killing cardano-node pid: $CARDANO_NODE_PID"
