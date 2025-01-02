@@ -47,9 +47,9 @@ export function loadBlock(path) {
   }
 }
 
-export function loadPage(type, page) {
-  const pg = JSON.parse(fs.readFileSync(DB + "/pages/" + type + "/" + page))
-  const last = JSON.parse(fs.readFileSync(DB + "/pages/" + type + "/last"))
+export function loadBlocksPage(page) {
+  const pg = JSON.parse(fs.readFileSync(DB + "/pages/blocks/" + page))
+  const last = JSON.parse(fs.readFileSync(DB + "/pages/blocks/last"))
   const newObj = {
     pageIndex: parseInt(page),
     lastPage: parseInt(last),
@@ -61,7 +61,25 @@ export function loadPage(type, page) {
       }
     })
   }
-  console.log(JSON.stringify(newObj, null, 2))
+  return newObj
+}
+
+export function loadTransactionsPage(page) {
+  const pg = JSON.parse(fs.readFileSync(DB + "/pages/transactions/" + page))
+  const last = JSON.parse(fs.readFileSync(DB + "/pages/transactions/last"))
+  const newObj = {
+    pageIndex: parseInt(page),
+    lastPage: parseInt(last),
+    pageData: pg.list.map(p => {
+      return {
+        index: pg.ids[p].index,
+        id: [p, small_hash(p)],
+        unspentCount: pg.ids[p].unspentCount,
+        spentCount: pg.ids[p].spent.length - pg.ids[p].unspentCount,
+        utxos: pg.ids[p].spent
+      }
+    })
+  }
   return newObj
 }
 
