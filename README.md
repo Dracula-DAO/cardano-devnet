@@ -1,14 +1,14 @@
 # Cardano Devnet
 
-This repository creates a completely local Cardano network that runs only on the development machine, with average block times that can be specified as a number of seconds from the command line.  It has been built to work as a submodule under the [Jambhala](https://github.com/iburzynski/jambhala) framework. 
+This repository creates a completely local Cardano network that runs only on the development machine, with average block times that can be specified as a number of seconds from the command line.  It has been built to work with [cardano-cli-guru](https://github.com/iburzynski/cardano-cli-guru), a submodule under the [Jambhala](https://github.com/iburzynski/jambhala) framework. 
 
 There are several additional features included in addition to a locally running node:
 
-* Live monitor - a terminal-based monitor script that shows high level transaction information for confirmed transactions, as well as pending transactions in the mempool.
+* Live monitor - a terminal-based monitor script that shows high-level transaction information for confirmed transactions, as well as pending transactions in the mempool.
 * Lightweight indexer - a very simple indexer built to work with the [Lucid](https://lucid.spacebudz.io/) framework.
 * Lucid provider - a Lucid provider that connects the client-side Lucid API to the node monitor and indexer.
 
-In the examples directory there are several examples of passing state through a sequence of transactions that demonstrate how multiple Cardano transactions can be chained to pass a script state from one transaction to the next without requiring the previous transaction to be included in a block. The so-called [Cardano EUTxO bottleneck](https://builtoncardano.com/blog/concurrency-and-cardano-a-problem-a-challenge-or-nothing-to-worry-about) of one transaction per script address per block does not exist, provided there is a way to query the blockchain mempool.
+In the examples directory, there are several examples of passing state through a sequence of transactions that demonstrate how multiple Cardano transactions can be chained to pass a script state from one transaction to the next without requiring the previous transaction to be included in a block. The so-called [Cardano EUTxO bottleneck](https://builtoncardano.com/blog/concurrency-and-cardano-a-problem-a-challenge-or-nothing-to-worry-about) of one transaction per script address per block does not exist, provided there is a way to query the blockchain mempool.
 
 Currenly only nodes that are block producers have access to the full network mempool, which means that stake pool operators could use a method such as the one demonstrated in this repository to offer a mempool query service to users as an additional way to provide value to the network.
 
@@ -75,8 +75,14 @@ $ node --version
 
 ### Use:
 
-1. Make sure to change your network ID in $PROJECT_ROOT/cardano_cli_guru/.env to 42.
-2. Start the devnet with the desired time between blocks (this is the average time between
+1. (Optional) Set CARDANO_CLI_GURU to the path of your [cardano-cli-guru](https://github.com/iburzynski/cardano-cli-guru) installation, if you have one.
+
+```
+$ export CARDANO_CLI_GURU=<path to cardano-cli-guru>
+```
+   
+3. Run 'direnv allow'
+4. Start the devnet with the desired time between blocks (this is the average time between
 blocks, sometimes they will be faster, sometimes slower).  block_time must be an 
 integer >= 1 (in seconds).
 
@@ -84,13 +90,14 @@ integer >= 1 (in seconds).
 $ devnet 10
 ```
 
-3. Monitor the devnet in a terminal window:
+3. Monitor the devnet in a different terminal window:
 
 ```
+$ cd cardano-devnet
 $ monitor
 ```
 
-4. Transfer some funds from the faucet to a Jambhala address:
+4. Transfer some funds from the faucet to a Jambhala address (the 'utxos' command comes from cardano-cli-guru):
 
 ```
 $ utxos faucet
