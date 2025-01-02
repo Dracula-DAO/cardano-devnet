@@ -17,6 +17,9 @@
         <div class="color-block shadow-xl flex flex-col p-4 mr-2 mb-2">
           <div>Block {blk.height}</div>
           <div>Hash {blk.id}</div>
+          {#if blk.txCount > 0}
+            <div class="btn color-transaction">{blk.txCount} Txs</div>
+          {/if}
         </div>
       </a>
     {/each}
