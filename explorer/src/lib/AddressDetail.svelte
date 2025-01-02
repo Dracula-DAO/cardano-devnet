@@ -1,5 +1,9 @@
 <script>
-  export let addr
+  let { addr } = $props()
+  let changeAlias = $state({
+    newValue: addr.alias,
+    updating: false
+  })
 </script>
 <table class="card border-separate border-spacing-4 shadow-lg">
   <tbody>
@@ -10,14 +14,24 @@
     <tr>
       <td>Address Alias</td>
       {#if addr.alias !== undefined}
-        <td>{ addr.alias } <a class="btn ml-4" data-sveltekit-preload-data="tap" data-sveltekit-reload href="/alias/{addr.address[0]}">Delete Alias</a></td>
+        {#if changeAlias.updating === false}
+          <td>{ addr.alias } <button class="btn ml-4" onclick={() => {
+            changeAlias.newValue = addr.alias
+            changeAlias.updating = true
+          }}>Rename Alias</button></td>
+        {:else}
+          <td>
+            <form method="POST" action="/alias">
+              <input type="hidden" name="from" value={addr.alias}/>
+              <input type="text" name="to" bind:value={changeAlias.newValue}/>
+              <input type="hidden" name="address" value={addr.address[0]}/>
+              <button type="submit" class="btn ml-4">Update</button>
+              <button class="btn ml-4" onclick={() => changeAlias.updating = false}>Cancel</button>
+            </form>
+          </td>
+        {/if}
       {:else}
-        <td>
-          <form method="POST" action="/alias">
-            <input type="text" name="alias" class="p-2" placeholder="Add alias">
-            <input type="hidden" name="address" value="{addr.address[0]}">
-          </form>
-        </td>
+        <td></td>
       {/if}
     </tr>
     <tr>
