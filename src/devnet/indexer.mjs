@@ -157,12 +157,14 @@ class DBWriter {
 
     // Update pages
     const page = Math.floor(dbBlock.height / PAGE_LENGTH_BLOCKS)
-    let pageObj = {}
+    let pageObj = []
     try {
       pageObj = JSON.parse(fs.readFileSync(this.db + "/pages/blocks/" + page))
     } catch (noSuchFile) {}
-    pageObj[dbBlock.height] = dbBlock.id
-    pageObj[dbBlock.id] = dbBlock.height
+    pageObj.push({
+      height: dbBlock.height,
+      id: dbBlock.id
+    })
     fs.writeFileSync(this.db + "/pages/blocks/" + page, JSON.stringify(pageObj, null, 2))
   }
 
