@@ -12,6 +12,50 @@ In the examples directory there are several examples of passing state through a 
 
 Currenly only nodes that are block producers have access to the full network mempool, which means that stake pool operators could use a method such as the one demonstrated in this repository to offer a mempool query service to users as an additional way to provide value to the network.
 
+## Component Diagram
+
+The diagram below shows how the :w
+components provided by this repository work. Both cardano-node and ogmios are provided by IOHK and are assumed to be in the path.
+
+![Component Diagram](./Component%20Diagram.png)
+
+### Step 1. Run the devnet
+
+```
+$ devnet <N>
+```
+where N is the target number of seconds between blocks. N must be >= 1. This starts cardano-node locally and runs ogmios, which connects to the unix socket provided by cardano-node.
+
+### Step 2. Run the monitor
+
+In a separate terminal window:
+```
+$ monitor
+```
+
+This starts up the monitor subsystem, which is implemented as a node.js script. The script starts up the following components (all in the same script)
+
+* OgmiosConnection
+
+OgmiosConnection connects to the ogmios JRPC socket and handles communication to / from ogmios. When a response comes back, it uses the JRPC method parameter to determine the function to call. Each method name is implemented by either OgmiosStateMachine or OgmiosSynchronousRequestHandler so OgmiosConnection sends the
+request to either but not both.
+
+* OgmiosStateMachine
+
+OgmiosStateMachine handles asynchronous events coming from the chain. New transactions, new blocks primarily.
+
+* OgmiosSynchronousRequestHandler
+
+OgmiosSynchronousRequestHandler is used by the LucidProviderBackend to issue requests that require a response, to the ogmios server synchronously.
+
+* DevnetIndexer
+
+DevnetIndexer handles transaction inputs (spent utxos) and outputs (unspent utxos). It maintains an in-memory DB of the tx hashes and the related data for every transaction.  Since this is a local development network there isn't a real need for anything more complicated like a SQLite DB.
+
+* LucidProviderBackend
+
+LucidProviderBackend implements the logic necessary to respond to Lucid requests coming from the client script through the LucidProviderFrontend component.  LucidProviderFrontend is included by every client that uses this framework.
+
 ## Dependencies:
 
 If you don't have node.js installed, the easiest way to install it is probably to
