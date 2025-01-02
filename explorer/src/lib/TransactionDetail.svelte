@@ -16,8 +16,8 @@
       <td>
         <table class="table-header-group border-separate border-spacing-4">
           <thead>
-            <th>Spent Inputs</th>
-            <th>Produced Outputs</th>
+            <th>Inputs</th>
+            <th>Outputs</th>
           </thead>
           <tbody>
             <td>
