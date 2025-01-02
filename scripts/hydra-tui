@@ -27,7 +27,7 @@ for i in "${@:1}"; do
   newargs+=("${tmp}")
 done
 
-echo "${newargs[*]}"
+#echo "${newargs[*]}"
 
 if [ -z ${hydrapath+x} ]; then
   # hydra-tui not in PATH external to this directory
