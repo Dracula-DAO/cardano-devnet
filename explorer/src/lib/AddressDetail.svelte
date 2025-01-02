@@ -1,25 +1,32 @@
 <script>
   export let addr
 </script>
-<table class="border-separate border-spacing-4">
+<table class="card border-separate border-spacing-4 shadow-lg">
   <tbody>
     <tr>
       <td>Address</td>
       <td>{ addr.address[0] }</td>
     </tr>
-    {#if addr.alias !== undefined}
-      <tr>
-        <td>Alias</td>
-        <td>{ addr.alias }</td>
-      </tr>
-    {/if}
+    <tr>
+      <td>Address Alias</td>
+      {#if addr.alias !== undefined}
+        <td>{ addr.alias } <a class="btn ml-4" data-sveltekit-preload-data="tap" data-sveltekit-reload href="/alias/{addr.address[0]}">Delete Alias</a></td>
+      {:else}
+        <td>
+          <form method="POST" action="/alias">
+            <input type="text" name="alias" class="p-2" placeholder="Add alias">
+            <input type="hidden" name="address" value="{addr.address[0]}">
+          </form>
+        </td>
+      {/if}
+    </tr>
     <tr>
       <td>Tokens</td>
       <td>
-        <table class="w-full border-separate border-spacing-4">
+        <table class="table-header-group border-separate border-spacing-4">
           <thead>
             <tr>
-              <th class="w-3/4">Policy ID : Token Name</th>
+              <th>Policy ID : Token Name</th>
               <th>Amount</th>
             </tr>
           </thead>
@@ -52,7 +59,7 @@
     <tr>
       <td>Transaction History</td>
       <td>
-        <table class="w-full border-separate border-spacing-4">
+        <table class="table-header-group border-separate border-spacing-4">
           <thead>
             <tr>
               <th>Block</th>
@@ -62,10 +69,10 @@
           <tbody>
             {#each addr.history as tx}
               <tr>
-                <td>
+                <td class="text-center">
                   <a class="btn color-block shadow-xl" href="/chain/{tx.block}">Block {tx.block}</a>
                 </td>
-                <td>
+                <td class="text-center">
                   <a class="btn color-transaction shadow-xl" href="/transaction/{tx.id[0]}">Tx {tx.id[1]}</a>
                 </td>
               </tr>

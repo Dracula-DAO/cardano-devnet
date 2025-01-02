@@ -10,7 +10,7 @@
   {/if}
 </div>
 <div class="card-title justify-center mb-5">Block {block.height}</div>
-<table class="border-separate border-spacing-4">
+<table class="card border-separate border-spacing-4 shadow-lg">
   <tbody>
     <tr>
       <td>ID</td>

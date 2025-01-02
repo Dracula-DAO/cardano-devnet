@@ -1,7 +1,7 @@
 <script>
   export let token
 </script>
-<table class="border-separate border-spacing-4">
+<table class="card border-separate border-spacing-4 shadow-lg">
   <tbody>
     <tr>
       <td>Policy ID</td>
@@ -14,11 +14,11 @@
     <tr>
       <td>Addresses</td>
       <td>
-        <table class="border-separate border-spacing-4">
+        <table class="table-header-group border-separate border-spacing-4">
           <thead>
             <tr>
               <td>Address</td>
-              <td>Alias</td>
+              <td>Alias(?)</td>
               <td>Amount</td>
             </tr>
           </thead>

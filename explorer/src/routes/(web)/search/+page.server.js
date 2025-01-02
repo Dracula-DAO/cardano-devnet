@@ -1,5 +1,4 @@
 import { redirect } from '@sveltejs/kit'
-
 import { search } from "$lib/server"
 
 export const actions = { 
