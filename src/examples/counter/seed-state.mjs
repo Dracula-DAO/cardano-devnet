@@ -3,6 +3,7 @@ import { LucidProviderFrontend } from '../../lucid-frontend.mjs'
 import { loadJambhalaAddress, loadJambhalaPrivKey, loadJambhalaNativeScript } from '../../jambhala-utils.mjs'
 
 // This schema must match the state type for the validator script
+// See jambhala/StateProgression.hs for the state type
 const CounterSchema = Data.Object({
   counter: Data.Integer()
 })
