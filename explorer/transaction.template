@@ -1,0 +1,13 @@
+<html>
+  <head></head>
+  <body>
+    <h1>Cardano Devnet Explorer</h1>
+    <h2>Viewing transaction: {{ id }}</h2>
+    {% for input in inputs %}
+      <div><a>Input {{ forloop.index0 }}: {{ input }}</a></div>
+    {% endfor %}
+    {% for output in outputs %}
+      <div><a>Output {{ forloop.index0 }}: {{ output }}</a></div>
+    {% endfor %}
+  </body>
+</html>

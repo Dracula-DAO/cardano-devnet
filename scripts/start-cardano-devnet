@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+
+while getopts "iem" opt; do
+    case $opt in
+        i)
+            START_INDEXER=true
+            ;;
+        e)
+            START_EXPLORER=true
+            ;;
+        m)
+            START_MONITOR=true
+            ;;
+        \?)
+            echoerr "Invalid option -$OPTARG"
+            print_help
+            exit 1
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+if [[ ! $1 == ?(-)+([0-9]) ]]; then
+  SCRIPTNAME=$(basename $0)
+  echo "usage: $SCRIPTNAME [-i] [-e] [-m] <block time>"
+  echo "  -i  run indexer"
+  echo "  -e  run explorer"
+  echo "  -m  run terminal monitor"
+  exit -1
+fi
+
+if [ ! $(type -P "cardano-node" ) ]; then
+  echo "cardano-node not in path, please install the binary"
+  exit -1
+fi
+
+if [ ! $(type -P "ogmios" ) ]; then
+  echo "ogmios not in path, please install the binary"
+  exit -1
+fi
+
+# Set up devnet
+$DEVNET_ROOT/scripts/devnet $1 
+TARGETDIR=$DEVNET_ROOT/target
+
+if pgrep -x "cardano-node" > /dev/null
+then
+  echo "Stopping cardano-node"
+  pkill cardano-node
+fi
+
+if pgrep -x "ogmios" > /dev/null
+then
+  echo "Stopping ogmios"
+  pkill ogmios
+fi
+
+echo cardano-node run \
+  --config $TARGETDIR/cardano-node.json \
+  --topology $TARGETDIR/topology.json \
+  --database-path $TARGETDIR/db \
+  --socket-path $CARDANO_NODE_SOCKET_PATH \
+  --shelley-operational-certificate $TARGETDIR/opcert.cert \
+  --shelley-kes-key $TARGETDIR/kes.skey \
+  --shelley-vrf-key $TARGETDIR/vrf.skey
+cardano-node run \
+  --config $TARGETDIR/cardano-node.json \
+  --topology $TARGETDIR/topology.json \
+  --database-path $TARGETDIR/db \
+  --socket-path $CARDANO_NODE_SOCKET_PATH \
+  --shelley-operational-certificate $TARGETDIR/opcert.cert \
+  --shelley-kes-key $TARGETDIR/kes.skey \
+  --shelley-vrf-key $TARGETDIR/vrf.skey > /dev/null 2>&1 &
+CARDANO_NODE_PID=$!
+
+# ogmios >6.0.0 required (assumed to be in path)
+echo ogmios --node-socket $CARDANO_NODE_SOCKET_PATH \
+       --node-config $TARGETDIR/cardano-node.json
+ogmios --node-socket $CARDANO_NODE_SOCKET_PATH \
+       --node-config $TARGETDIR/cardano-node.json > /dev/null 2>&1 &
+OGMIOS_PID=$!
+
+# transfer from faucet -> faucet to put a tx on-chain (genesis tx's are not indexed)
+sleep 1
+transfer faucet faucet 1 8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284#0 
+
+if [ -n "$START_INDEXER" ]; then
+  echo "Starting indexer $START_INDEXER"
+  node $DEVNET_ROOT/src/devnet/indexer.mjs > /dev/null 2>&1 &
+  INDEXER_PID=$!
+fi
+
+if [ -n "$START_EXPLORER" ]; then
+  echo "Starting explorer"
+  node $DEVNET_ROOT/src/devnet/explorer.mjs &
+  EXPLORER_PID=$!
+fi
+
+function clean_up {
+  echo
+  echo "Trapped exit; cleaning up"
+  echo "Killing cardano-node pid: $CARDANO_NODE_PID"
+  kill $CARDANO_NODE_PID
+  echo "Killing ogmios pid: $OGMIOS_PID"
+  kill $OGMIOS_PID
+  if [ -n "$START_INDEXER" ]; then
+    echo "Killing indexer pid: $INDEXER_PID"
+    kill $INDEXER_PID
+  fi
+  if [ -n "$START_EXPLORER" ]; then
+    echo "Killing explorer pid: $EXPLORER_PID"
+    kill $EXPLORER_PID
+  fi
+  kill -term $$
+}
+
+trap clean_up EXIT
+
+echo
+echo "Cardano Devnet running..."
+if [ -n "$START_MONITOR" ]; then
+  echo "Starting monitor"
+  monitor
+else
+  sleep infinity
+fi
