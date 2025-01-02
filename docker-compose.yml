@@ -70,6 +70,23 @@ services:
       - ${DEVNET_ROOT}/runtime:/runtime
       - ${DEVNET_ROOT}/hydra:/hydra
       - ${CARDANO_ASSETS_PATH}:/assets
+    network_mode: host
+    working_dir: /work
+    environment:
+      - CARDANO_NODE_SOCKET_PATH=/runtime/ipc/node.socket
+      - CARDANO_NODE_NETWORK_ID=42
+
+  hydra-tui:
+    image: ghcr.io/cardano-scaling/hydra-tui:latest
+    user: $MY_UID:$MY_GID
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${PWD}:/work
+      - ${DEVNET_ROOT}/runtime:/runtime
+      - ${DEVNET_ROOT}/hydra:/hydra
+      - ${CARDANO_ASSETS_PATH}:/assets
+    network_mode: host
     working_dir: /work
     environment:
       - CARDANO_NODE_SOCKET_PATH=/runtime/ipc/node.socket
