@@ -10,7 +10,7 @@ The project includes several additional features in addition to a locally runnin
 
 <img src="./docs/images/devnet_monitor.png" width="700px"/>
 
-* Lightweight indexer - a filesystem indexer built to store chain history in human readable (json) format is a database directory using symlinks to optimize storage. This is perfect for development because you can start the devnet, run some tests, then stop the devnet and debug using the indexed database and built-in explorer.  This also allows you to peruse the database using standard filesystem cli tools:
+* Lightweight indexer - a filesystem indexer built to store chain history in human readable (json) format in a filesystem directory using symlinks to optimize storage. This is perfect for development because you can start the devnet, run some tests, then stop the devnet and debug using the indexed database and built-in explorer.  This also allows you to peruse the database using standard filesystem cli tools:
 
 ```
 $ cat db/transactions/41a818da0864ba9f4552af75c943b564870db652c99ea1e31d90e2745edb9b57/tx
