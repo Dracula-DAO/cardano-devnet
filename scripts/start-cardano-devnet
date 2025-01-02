@@ -40,18 +40,10 @@ fi
 RUNTIMEDIR=$DEVNET_ROOT/runtime
 TARGETDIR=$RUNTIMEDIR/chain
 
-if [ "$DOCKER" == "true" ] || [ ! $(type -P "cardano-cli" ) ]; then
-  echo "start-cardano-devnet: using docker for cardano-cli"
-  CARDANO_CLI="docker compose -f $DEVNET_ROOT/docker-compose.yml run --rm -T cardano-cli"
-  CARDANO_CLI_RUNTIMEDIR="/devnet/runtime"
-  CARDANO_CLI_KEYS_PATH="/keys"
-  DOCKER=true
-else
-  echo "start-cardano-devnet: using cardano-cli in path"
-  CARDANO_CLI="cardano-cli"
-  CARDANO_CLI_RUNTIMEDIR="$RUNTIMEDIR"
-  CARDANO_CLI_KEYS_PATH="$KEYS_PATH"
-fi
+CARDANO_CLI="cardano-cli"
+CARDANO_CLI_RUNTIMEDIR="$RUNTIMEDIR"
+CARDANO_CLI_KEYS_PATH="$CARDANO_ASSETS_PATH/keys"
+echo "CARDANO_CLI_KEYS_PATH=$CARDANO_CLI_KEYS_PATH"
 
 if [ ! $(type -P "ogmios" ) ]; then
   echo "ogmios not in path, configuring for docker"
@@ -66,7 +58,7 @@ if [ "$DOCKER" == "true" ] && [ ! $(type -P "docker" ) ]; then
 fi
 
 # Clean up old runs
-[ -d "$RUNTIMEDIR" ] && { echo "Cleaning up directory $RUNTIMEDIR" ; sudo rm -r $RUNTIMEDIR ; }
+[ -d "$RUNTIMEDIR" ] && { echo "Cleaning up directory $RUNTIMEDIR" ; rm -rf $RUNTIMEDIR ; }
 mkdir -p "$RUNTIMEDIR"
 mkdir -p "$RUNTIMEDIR/db"
 mkdir -p "$RUNTIMEDIR/ipc"
