@@ -31,6 +31,5 @@ if [ -z ${clipath+x} ]; then
   # cardano-cli not in PATH external to this directory
   docker compose -f $DEVNET_ROOT/docker-compose.yml run --rm -T cardano-cli "${newargs[@]}"
 else 
-  echo "clipath"
   $clipath/cardano-cli "${@:1}"
 fi
