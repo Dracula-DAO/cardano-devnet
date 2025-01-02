@@ -154,3 +154,34 @@ export function loadUtxo(hash, ref) {
   utxo.hasNativeTokens = Object.keys(utxo.value).length > 0
   return utxo
 }
+
+const testPath = async path => {
+  return new Promise(res => {
+    try {
+      fs.statSync(path)
+      res(true)
+    } catch (fileNotFoundErr) {
+      res(false)
+    }
+  })
+}
+
+export async function search(pattern) {
+  if (pattern.includes("#")) {
+    const utxoSplit = pattern.split("#")
+    if (utxoSplit.length === 2 && await testPath(DB + "/transactions/" + utxoSplit[0] + "/outputs/" + utxoSplit[1])) {
+      console.log("found utxo")
+      return "/utxo/" + utxoSplit.join("/")
+    }
+  } else {
+    if (await testPath(DB + "/blocks/" + pattern)) {
+      console.log("found block")
+      return "/block/" + pattern
+    }
+    if (await testPath(DB + "/transactions/" + pattern)) {
+      console.log("found transaction")
+      return "/transaction/" + pattern
+    }
+  }
+  throw new Error("Not found: " + pattern)
+}
