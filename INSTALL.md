@@ -22,7 +22,12 @@ If you don't have or don't want to use cardano-node and ogmios binaries, the dev
 
 ## Installation
 
-1. Clone the repo and allow direnv ([direnv](https://direnv.net/) must be installed on your system)
+1. Clone the repo and allow direnv ([direnv](https://direnv.net/) must be installed on your system). If you have [Cardano CLI Guru](https://github.com/cryptophonic/cardano-cli-guru) installed on your system, this repository supports it, but you need to set the CARDANO_CLI_GURU environment variable to the path of the repository prior to running "direnv allow":
+
+```
+(optional step)
+export CARADANO_CLI_GURU=<path to cardano-cli-guru repo>
+```
 
 ```
 $ git clone https://github.com/cryptophonic/cardano-devnet
