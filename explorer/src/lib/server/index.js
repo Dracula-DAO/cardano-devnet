@@ -2,6 +2,17 @@ import fs from 'fs'
 
 const DB=process.env.DEVNET_ROOT + "/runtime/index"
 
+const logo_lookup = [
+  "cardano-ada-logo.svg",
+  "svg/bolt.svg",
+  "svg/gear.svg",
+  "svg/cone.svg",
+  "svg/flag.svg",
+  "svg/flame.svg",
+  "svg/flower.svg",
+  "svg/locked.svg"
+]
+
 function small_hash(hash) {
   return hash.slice(0, 6) + ".." + hash.slice(-6)
 }
@@ -55,12 +66,11 @@ export function loadLatest() {
     Object.keys(tokens[kpolicy]).map(ktoken => {
       let logo
       let amount
+      logo = logo_lookup[tokens[kpolicy][ktoken].index]
       if (kpolicy === "ada" && ktoken == "lovelace") {
-        logo = "cardano-ada-logo.svg"
-        amount = formatADA(tokens[kpolicy][ktoken])
+        amount = formatADA(tokens[kpolicy][ktoken].amount)
       } else {
-        logo = "svg/bolt.svg"
-        amount = tokens[kpolicy][ktoken]
+        amount = tokens[kpolicy][ktoken].amount
       }
       acc[small_hash(kpolicy) + ":" + ktoken] = {
         logo: logo,
@@ -147,6 +157,7 @@ export function loadTransaction(hash) {
 export function loadUtxo(hash, ref) {
   const txData = JSON.parse(fs.readFileSync(DB + "/transactions/" + hash + "/tx"))
   const utxoData = JSON.parse(fs.readFileSync(DB + "/transactions/" + hash + "/outputs/" + ref + "/output"))
+  const metadata = JSON.parse(fs.readFileSync(DB + "/tokens/ledger"))
   const utxo = {
     hash: [hash, small_hash(hash)],
     ref: ref,
@@ -156,12 +167,7 @@ export function loadUtxo(hash, ref) {
     redeemer: utxoData.redeemer,
     value: Object.keys(utxoData.value).reduce((acc, kpolicy) => {
       Object.keys(utxoData.value[kpolicy]).map(ktoken => {
-        let logo
-        if (kpolicy === "ada" && ktoken == "lovelace") {
-          logo = "cardano-ada-logo.svg"
-        } else {
-          logo = "svg/bolt.svg"
-        }
+        const logo = logo_lookup[metadata[kpolicy][ktoken].index]
         acc[kpolicy + ":" + ktoken] = {
           policy: [kpolicy, small_hash(kpolicy)],
           token: ktoken,
@@ -187,14 +193,10 @@ export function loadUtxo(hash, ref) {
 export function loadAddress(addr) {
   const alias = addr_alias(addr)
   const ledgerValues = JSON.parse(fs.readFileSync(DB + "/addresses/" + addr + "/ledger"))
+  const metadata = JSON.parse(fs.readFileSync(DB + "/tokens/ledger"))
   const ledger = Object.keys(ledgerValues).reduce((acc, kpolicy) => {
     Object.keys(ledgerValues[kpolicy]).map(ktoken => {
-      let logo
-      if (kpolicy === "ada" && ktoken == "lovelace") {
-        logo = "cardano-ada-logo.svg"
-      } else {
-        logo = "svg/bolt.svg"
-      }
+      const logo = logo_lookup[metadata[kpolicy][ktoken].index]
       acc[kpolicy + ":" + ktoken] = {
         policy: [kpolicy, small_hash(kpolicy)],
         token: ktoken,
@@ -238,6 +240,7 @@ export function loadAddress(addr) {
 
 export function loadToken(policy, token) {
   const tokData = JSON.parse(fs.readFileSync(DB + "/tokens/" + policy + "/" + token + "/ledger"))
+  const metadata = JSON.parse(fs.readFileSync(DB + "/tokens/ledger"))
   let count = 0
   const pagedData = Object.keys(tokData).reduce((acc, addr) => {
     let amt = tokData[addr]
@@ -254,6 +257,7 @@ export function loadToken(policy, token) {
     return acc
   }, [])
   return {
+    logo: logo_lookup[metadata[policy][token].index],
     policy: policy,
     token: token,
     ledger: pagedData
