@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <link href="/css/tailwind.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
+  </head>
+  <body class="bg-gray-100">
+    <div class="flex justify-center pb-8">
+      <h1 class="text-3xl font-bold">Cardano Devnet Explorer</h1>
+    </div>
+    <div class="flex justify-center ml-[50px] mr-[50px]">
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body items-center text-center">
+          <div class="card-title">Address Summary</div>
+          <table class="table-auto">
+            <tbody>
+              <tr>
+                <td>Address</td>
+                <td>{{ address }}</td>
+              </tr>
+              <tr>
+                <td>Block Height</td>
+                <td><a href="/chain/{{ height }}">{{ height }}</a></td>
+              </tr>
+              <tr>
+                <td>Balances</td>
+                <td>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Token</th>
+                        <th>Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for a in ledger %}
+                        <tr>
+                          <td><a href="/token/{{ a[0] }}">{{ a[0] }}</a></td>
+                          <td>{{ a[1] }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
