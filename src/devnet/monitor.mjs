@@ -374,7 +374,7 @@ class OgmiosStateMachine {
       if (msg.result.block.transactions.length > 0) {
         // Last tx
         const lastTx = msg.result.block.transactions[msg.result.block.transactions.length - 1]
-        const fee = lastTx.fee.lovelace / 1000000.0
+        const fee = lastTx.fee.ada.lovelace / 1000000.0
         latestTransaction.content = " Latest Tx: " + colorTx(lastTx.id) + "  Fee: ₳ " + fee.toFixed(6)
 
         const [text, height] = formatTx(lastTx)

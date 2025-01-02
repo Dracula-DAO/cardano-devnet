@@ -44,14 +44,14 @@ else
   echo "Found ogmios in path"
 fi
 
-if [ $DOCKER=true ] && [ ! $(type -P "docker-compose" ) ]; then
+if [ "$DOCKER" == "true" ] && [ ! $(type -P "docker-compose" ) ]; then
   echo "docker-compose not in path, please install either cardano-node and ogmios, or docker and docker-compose"
   exit -1
 fi
 
 # Clean up old runs
 RUNTIMEDIR=$DEVNET_ROOT/runtime
-[ -d "$RUNTIMEDIR" ] && { echo "Cleaning up directory $RUNTIMEDIR" ; rm -rf $RUNTIMEDIR ; }
+[ -d "$RUNTIMEDIR" ] && { echo "Cleaning up directory $RUNTIMEDIR" ; sudo rm -r $RUNTIMEDIR ; }
 mkdir -p "$RUNTIMEDIR"
 mkdir -p "$RUNTIMEDIR/db"
 mkdir -p "$RUNTIMEDIR/ipc"
@@ -66,7 +66,7 @@ TX_SIGNED=$RUNTIMEDIR/tx.signed
 mkfifo $TX_DRAFT
 mkfifo $TX_SIGNED
 
-if [ $DOCKER=true ]; then
+if [ "$DOCKER" == "true" ]; then
 
   docker-compose up --detach
   sudo chown $USER $CARDANO_NODE_SOCKET_PATH
@@ -144,15 +144,6 @@ function clean_up {
   echo
   echo "Trapped exit; cleaning up"
 
-  if [ $DOCKER=true ]; then
-    docker-compose down
-  else
-    echo "Killing cardano-node pid: $CARDANO_NODE_PID"
-    kill $CARDANO_NODE_PID
-    echo "Killing ogmios pid: $OGMIOS_PID"
-    kill $OGMIOS_PID
-  fi
-
   if [ -n "$START_INDEXER" ]; then
     echo "Killing indexer pid: $INDEXER_PID"
     kill $INDEXER_PID
@@ -161,6 +152,16 @@ function clean_up {
     echo "Killing explorer pid: $EXPLORER_PID"
     kill $EXPLORER_PID
   fi
+
+if [ "$DOCKER" == "true" ]; then
+    docker-compose down
+  else
+    echo "Killing cardano-node pid: $CARDANO_NODE_PID"
+    kill $CARDANO_NODE_PID
+    echo "Killing ogmios pid: $OGMIOS_PID"
+    kill $OGMIOS_PID
+  fi
+
   kill -term $$
 }
 
