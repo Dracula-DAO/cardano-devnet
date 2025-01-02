@@ -18,7 +18,7 @@ services:
       #- ${CARDANO_ASSETS_PATH}:/assets
 
   cardano-cli:
-    image: cardanosolutions/cardano-node-ogmios:v6.9.0_10.1.2
+    image: cardanosolutions/cardano-node-ogmios:v6.10.0_10.1.3
     user: $MY_UID:$MY_GID
     entrypoint: /usr/local/bin/cardano-cli
     volumes:
@@ -31,7 +31,7 @@ services:
       - CARDANO_NODE_NETWORK_ID=42
 
   cardano-node:
-    image: cardanosolutions/cardano-node-ogmios:v6.9.0_10.1.2
+    image: cardanosolutions/cardano-node-ogmios:v6.10.0_10.1.3
     container_name: devnet-cardano-node
     user: $MY_UID:$MY_GID
     entrypoint: /usr/local/bin/cardano-node
@@ -59,7 +59,7 @@ services:
     restart: on-failure
 
   ogmios:
-    image: cardanosolutions/cardano-node-ogmios:v6.9.0_10.1.2
+    image: cardanosolutions/cardano-node-ogmios:v6.10.0_10.1.3
     container_name: devnet-ogmios
     user: $MY_UID:$MY_GID
     entrypoint: /bin/ogmios
