@@ -1,4 +1,5 @@
 import { C, PROTOCOL_PARAMETERS_DEFAULT } from "lucid-cardano"
+import { decode as decodeCbor } from 'cbor-x'
 
 export class LucidProviderFrontend {
 
@@ -119,6 +120,24 @@ export class LucidProviderFrontend {
       method: "submitTx",
       params: {
         cbor: tx
+      }
+    })
+  }
+
+  async getSymbolicAddress(name) {
+    return await this.query({
+      method: "getSymbolicAddress",
+      params: {
+        name: name
+      }
+    })
+  }
+
+  async getSymbolicPrivKey(name) {
+    return await this.query({
+      method: "getSymbolicPrivKey",
+      params: {
+        name: name
       }
     })
   }
