@@ -27,6 +27,10 @@ services:
     environment:
       - CARDANO_BLOCK_PRODUCER=true
       - CARDANO_NODE_NETWORK_ID=42
+    # override health check because we're not running ogmios here
+    healthcheck:
+      test: echo "healthy"
+      interval: 1m
     command: [
       "run",
       "--config", "/runtime/chain/cardano-node.json",
@@ -59,4 +63,6 @@ services:
   hydra-node:
     image: ghcr.io/cardano-scaling/hydra-node:latest
     user: $MY_UID:$MY_GID
+    volumes:
+      - ${DEVNET_ROOT}/hydra:/hydra
 
