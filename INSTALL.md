@@ -6,19 +6,18 @@ This repository was developed and tested using Ubuntu Linux. If you are able to 
 
 In order to run the development network and tools, you need one of the following setups:
 
-### Setup A
+### Setup option A
 
 If you want to have control over the versions of cardano-node and / or ogmios you are using, simply install the binaries directly.
 
 1. Build or download a [cardano-node](https://github.com/IntersectMBO/cardano-node) (>8.9.0) executable and ensure the binary is in your PATH.
 2. Build or download [ogmios](https://github.com/CardanoSolutions/ogmios) (>6.2.0) and ensure the binary is in your PATH.
 
-### Setup B
+### Setup option B
 
 If you don't have or don't want to use cardano-node and ogmios binaries, the devnet can be started using standardized docker containers instead.
 
-1. Install [docker](https://docs.docker.com/engine/install/) and ensure it works for the user you want to run the devnet as.
-2. If your docker installation did not come with [docker-compose](https://docs.docker.com/compose/install/), download and install it and ensure the binary is in your PATH.
+1. Install [docker](https://docs.docker.com/engine/install/) and ensure it works for the user you want to run the devnet as. Make sure you have the latest version with the "docker compose" command.
 
 ## Installation
 
