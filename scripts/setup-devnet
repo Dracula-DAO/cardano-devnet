@@ -35,6 +35,8 @@ echo "Copying faucet keys into CARDANO_CLI_GURU assets directory"
 cp $BASEDIR/config/credentials/faucet.vkey $CARDANO_CLI_GURU/assets/keys
 cp $BASEDIR/config/credentials/faucet.skey $CARDANO_CLI_GURU/assets/keys
 cp $BASEDIR/config/credentials/faucet.addr $CARDANO_CLI_GURU/assets/addr
+faucet_addr=$(cat $CARDANO_CLI_GURU/assets/addr/faucet.addr)
+echo -n faucet > $CARDANO_CLI_GURU/assets/alias/$faucet_addr.alias
 
 # Update start time params
 echo '{"Producers": []}' > "$TARGETDIR/topology.json"
