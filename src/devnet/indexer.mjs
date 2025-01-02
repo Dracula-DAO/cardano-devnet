@@ -130,6 +130,27 @@ class DBWriter {
       }
     }, null, 2))
 
+    // If CARDANO_CLI_GURU is set, copy any address names as aliases
+    if (process.env.CARDANO_CLI_GURU !== undefined) {
+      const addrDir = process.env.CARDANO_CLI_GURU + "/assets/addr"
+      fs.readdir(addrDir, (err, files) => {
+        if (err) {
+          throw new Error(err)
+        }
+        files.forEach(file => {
+          const addr = fs.readFileSync(addrDir + "/" + file)
+          const nameSplit = path.basename(file).split(".")
+          if (nameSplit[1] === "addr") {
+            const addrDB = this.db + "/addresses/" + addr
+            if (!fs.existsSync(addrDB)) {
+              fs.mkdirSync(addrDB)
+            }
+            fs.writeFileSync(addrDB + "/alias", nameSplit[0])
+          }
+        })
+      })
+    }
+
     // Write pages
     const txObj = {
       list: [],
