@@ -71,6 +71,11 @@
   "TraceTxInbound": false,
   "TraceTxOutbound": false,
   "TraceTxSubmissionProtocol": false,
+  "hasEKG": 12788,
+  "hasPrometheus": [
+    "0.0.0.0",
+    12798
+  ],
   "options": {
     "mapBackends": {
       "cardano.node.metrics": [
