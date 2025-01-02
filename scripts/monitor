@@ -247,7 +247,7 @@ class DevnetIndexer {
   }
 
   utxosAtAddress(bech32Addr) {
-    log.info("Fetching utxos at address: " + bech32Addr)
+    //log.info("Fetching utxos at address: " + bech32Addr)
     if (this.addrs[bech32Addr] !== undefined) {
       const utxos = this.addrs[bech32Addr].map(ref => {
         const parts = ref.split("#")
@@ -257,6 +257,12 @@ class DevnetIndexer {
       return utxos
     }
     return []
+  }
+
+  utxoAtRef(outref) {
+    const parts = outref.split("#")
+    const [addr, value, datum] = this.utxos[outref]
+    return [parts[0], parseInt(parts[1], 10), addr, value, datum]
   }
 
 }
@@ -300,6 +306,7 @@ class OgmiosStateMachine {
 
   constructor(indexer) {
     this.indexer = indexer
+    this.blockCallbacks = []
   }
 
   async init(ogmios) {
@@ -315,6 +322,10 @@ class OgmiosStateMachine {
     this.ogmios.send({
       method: "acquireMempool"
     })
+  }
+
+  async waitBlock(cb) {
+    this.blockCallbacks.push(cb)
   }
 
   findIntersection(msg) {
@@ -357,6 +368,12 @@ class OgmiosStateMachine {
       }
       screen.render()
     }
+    // Trigger callbacks if any
+    this.blockCallbacks.map(cb => {
+      cb()
+    })
+    // Clear callback
+    this.blockCallbacks = []
     this.ogmios.send({
       method: "nextBlock"
     })
@@ -515,8 +532,9 @@ class OgmiosSynchronousRequestHandler {
 
 class DevnetProviderBackend {
 
-  constructor(ogmios, indexer, port) {
+  constructor(ogmios, osm, indexer, port) {
     this.ogmios = ogmios
+    this.osm = osm
     this.indexer = indexer
     this.server = new WebSocket.Server({ port: port })
     this.server.on('connection', sock => {
@@ -548,6 +566,17 @@ class DevnetProviderBackend {
     })
   }
 
+  // Simply waits for the next block before it returns. Useful for synchronizing bash
+  // scripts or other sequencing transactions
+  async waitBlock() {
+    await new Promise(resolve => {
+      this.osm.waitBlock(() => {
+        resolve()
+      })
+    })
+    return {}
+  }
+
   async getUtxos(params) {
     // Return list of unspent utxos, including mempool tx's
     let addr
@@ -563,7 +592,6 @@ class DevnetProviderBackend {
       addr = params.address
     }
     return this.indexer.utxosAtAddress(addr).map(utxo => {
-      log.info(JSON.stringify(utxo))
       const amounts = utxo[3]
       const collapsedUtxoValue = {}
       Object.keys(amounts).map(policy => {
@@ -594,6 +622,33 @@ class DevnetProviderBackend {
     })
   }
 
+  async getUtxosByOutRef(params) {
+    const outref = params.outref
+    const ref = outref.txHash + "#" + outref.outputIndex
+    const utxo = this.indexer.utxoAtRef(ref)
+    const amounts = utxo[3]
+    const collapsedUtxoValue = {}
+    Object.keys(amounts).map(policy => {
+      if (policy === "ada") {
+        collapsedUtxoValue["lovelace"] = amounts[policy].lovelace
+      } else {
+        Object.keys(amounts[policy]).map(name => {
+          collapsedUtxoValue[policy + name] = amounts[policy][name]
+        })
+      }
+    })
+    const obj = {
+      txHash: utxo[0],
+      outputIndex: utxo[1],
+      assets: collapsedUtxoValue,
+      address: utxo[2],
+      datumHash: null,
+      datum: utxo[4],
+      scriptRef: null
+    }
+    return obj
+  }
+
   async submitTx(tx) {
     const res = await this.ogmios.submitTx(tx.cbor)
     return res.transaction.id
@@ -613,4 +668,4 @@ const indexer = new DevnetIndexer()
 const osm = new OgmiosStateMachine(indexer)
 const osrh = new OgmiosSynchronousRequestHandler()
 const ogmios = new OgmiosConnection(OGMIOS_PORT, osm, osrh)
-const lpv = new DevnetProviderBackend(osrh, indexer, LUCID_PORT)
+const lpv = new DevnetProviderBackend(osrh, osm, indexer, LUCID_PORT)
