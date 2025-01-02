@@ -20,11 +20,11 @@ RUNTIMEDIR="$BASEDIR/runtime"
 TARGETDIR="$RUNTIMEDIR/chain"
 
 if [ ! $(type -P "cardano-cli" ) ]; then
-  echo "Warn (devnet): cardano-cli not in path, configuring for docker"
+  echo "devnet: cardano-cli not in path, configuring for docker"
   CARDANO_CLI="docker compose -f $DEVNET_ROOT/docker-compose.yml run --rm cardano-cli"
   CARDANO_CLI_TARGETDIR="/devnet/runtime/chain"
 else
-  echo "(devnet) Found cardano-cli in path"
+  echo "devnet: found cardano-cli in path"
   CARDANO_CLI="cardano-cli"
   CARDANO_CLI_TARGETDIR="$TARGETDIR"
 fi

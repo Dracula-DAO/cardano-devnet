@@ -31,33 +31,33 @@ if [[ ! $1 == ?(-)+([0-9]) ]]; then
 fi
 
 if [ ! $(type -P "cardano-node" ) ]; then
-  echo "Warn: cardano-node not in path, configuring for docker"
+  echo "cardano-node not in path, configuring for docker"
   DOCKER=true
 else
-  echo "Found cardano-node in path"
+  echo "found cardano-node in path"
 fi
 
 RUNTIMEDIR=$DEVNET_ROOT/runtime
 TARGETDIR=$RUNTIMEDIR/chain
 
-if [ ! $(type -P "cardano-cli" ) ]; then
-  echo "(start-cardano-devnet): using docker for cardano-cli"
-  CARDANO_CLI="docker compose -f $DEVNET_ROOT/docker-compose.yml run --rm cardano-cli"
+if [ "$DOCKER" == "true" ] || [ ! $(type -P "cardano-cli" ) ]; then
+  echo "start-cardano-devnet: using docker for cardano-cli"
+  CARDANO_CLI="docker compose -f $DEVNET_ROOT/docker-compose.yml run --rm -T cardano-cli"
   CARDANO_CLI_RUNTIMEDIR="/devnet/runtime"
   CARDANO_CLI_KEYS_PATH="/keys"
   DOCKER=true
 else
-  echo "(start-cardano-devnet) Using cardano-cli in path"
+  echo "start-cardano-devnet: using cardano-cli in path"
   CARDANO_CLI="cardano-cli"
   CARDANO_CLI_RUNTIMEDIR="$RUNTIMEDIR"
   CARDANO_CLI_KEYS_PATH="$KEYS_PATH"
 fi
 
 if [ ! $(type -P "ogmios" ) ]; then
-  echo "Warn: ogmios not in path, configuring for docker"
+  echo "ogmios not in path, configuring for docker"
   DOCKER=true
 else
-  echo "Found ogmios in path"
+  echo "found ogmios in path"
 fi
 
 if [ "$DOCKER" == "true" ] && [ ! $(type -P "docker" ) ]; then
@@ -70,7 +70,6 @@ fi
 mkdir -p "$RUNTIMEDIR"
 mkdir -p "$RUNTIMEDIR/db"
 mkdir -p "$RUNTIMEDIR/ipc"
-touch "$RUNTIMEDIR/ipc/node.socket"
 
 # Set up devnet
 $DEVNET_ROOT/scripts/devnet $1 
@@ -82,7 +81,6 @@ mkfifo $RUNTIMEDIR/tx.signed
 if [ "$DOCKER" == "true" ]; then
 
   docker compose up cardano-node ogmios --detach
-  sudo chown $USER $CARDANO_NODE_SOCKET_PATH
 
 else
 
@@ -129,15 +127,30 @@ fi
 # note: we're using named fifos here so we issue the commands in "reverse" order so
 # there is a reader listening on the pipe when we create the writer to prevent an error
 sleep 1
+echo "#"
+echo "# build / sign / submit in reverse order because pipes need to have listeners before you"
+echo "# can write to them. (tx.draft and tx.signed are fifos)"
+echo "#"
+echo $CARDANO_CLI transaction submit \
+  --tx-file "$CARDANO_CLI_RUNTIMEDIR/tx.signed" 
 $CARDANO_CLI transaction submit \
   --tx-file "$CARDANO_CLI_RUNTIMEDIR/tx.signed" &
+sleep 1
+echo $CARDANO_CLI transaction sign \
+  --tx-body-file "$CARDANO_CLI_RUNTIMEDIR/tx.draft" \
+  --signing-key-file "$CARDANO_CLI_KEYS_PATH/faucet.skey" \
+  --out-file "$CARDANO_CLI_RUNTIMEDIR/tx.signed"
 $CARDANO_CLI transaction sign \
   --tx-body-file "$CARDANO_CLI_RUNTIMEDIR/tx.draft" \
-  --signing-key-file "$CARADNO_CLI_KEYS_PATH/faucet.skey" \
+  --signing-key-file "$CARDANO_CLI_KEYS_PATH/faucet.skey" \
   --out-file "$CARDANO_CLI_RUNTIMEDIR/tx.signed" &
+sleep 1
+echo $CARDANO_CLI transaction build \
+  --tx-in 8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284#0 \
+  --change-address addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv \
+  --out-file "$CARDANO_CLI_RUNTIMEDIR/tx.draft"
 $CARDANO_CLI transaction build \
   --tx-in 8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284#0 \
-  --tx-out addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv+899999829835 \
   --change-address addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv \
   --out-file "$CARDANO_CLI_RUNTIMEDIR/tx.draft"
 
