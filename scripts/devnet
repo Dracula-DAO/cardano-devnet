@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+# Based on demo/prepare-devnet.sh script from hydra repo. Added in block time customization
+# and auto-startup for cardano-node.  ogmios is started to provide syncronization and
+# mempool monitoring.
+# Hydra repo: https://github.com/input-output-hk/hydra
+
+# Prepare a "target" directory holding credentials, a dummy topology and
+# "up-to-date" genesis files. If the directory exists, it is wiped out.
+set -e
+
+if [[ ! -v $1 ]]; then
+    SCRIPTNAME=$(basename $0)
+    echo "usage: $SCRIPTNAME <block time>"
+    exit -1
+fi
+
+# PROJECT_ROOT comes from jambhala environment
+if [[ ! -v PROJECT_ROOT ]]; then
+    BASEDIR=.
+else
+    BASEDIR=$PROJECT_ROOT/cardano-devnet
+fi
+TARGETDIR="$BASEDIR/target"
+
+[ -d "$TARGETDIR" ] && { echo "Cleaning up directory $TARGETDIR" ; sudo rm -r $TARGETDIR ; }
+
+cp -af "$BASEDIR/config/genesis/" "$TARGETDIR"
+cp -af "$BASEDIR/config/protocol-parameters.json" "$TARGETDIR"
+
+# Copy faucet keys, address to the jambhala assets directory
+if [[ -v PROJECT_ROOT ]]; then
+    echo "Copying faucet keys into jambhala assets directory"
+    cp $BASEDIR/config/credentials/faucet.vkey $PROJECT_ROOT/cardano-cli-guru/assets/keys
+    cp $BASEDIR/config/credentials/faucet.skey $PROJECT_ROOT/cardano-cli-guru/assets/keys
+    cp $BASEDIR/config/credentials/faucet.addr $PROJECT_ROOT/cardano-cli-guru/assets/addr
+fi
+
+echo '{"Producers": []}' > "$TARGETDIR/topology.json"
+sed -i "s/\"startTime\": [0-9]*/\"startTime\": $(date +%s)/" "$TARGETDIR/genesis-byron.json" && \
+sed -i "s/\"systemStart\": \".*\"/\"systemStart\": \"$(date -u +%FT%TZ)\"/" "$TARGETDIR/genesis-shelley.json"
+
+# Calculate activeSlotsCoeff from slot time parameter and add to genesis file
+COEFF=$(jq -n 1/$1)
+echo "Setting slot time to $1: coeffecient=$COEFF"
+sed -i "s/\"activeSlotsCoeff\": .*/\"activeSlotsCoeff\": $COEFF,/" "$TARGETDIR/genesis-shelley.json"
+
+find $TARGETDIR -type f -exec chmod 0400 {} \;
+mkdir "$TARGETDIR/ipc"
+echo "Prepared devnet, starting cluster now"
+
+# cardano-node >8.0.0 required (assumed to be in path)
+cardano-node --version
+cardano-node run \
+  --config $TARGETDIR/cardano-node.json \
+  --topology $TARGETDIR/topology.json \
+  --database-path $TARGETDIR/db \
+  --socket-path $CARDANO_NODE_SOCKET_PATH \
+  --shelley-operational-certificate $TARGETDIR/opcert.cert \
+  --shelley-kes-key $TARGETDIR/kes.skey \
+  --shelley-vrf-key $TARGETDIR/vrf.skey &
+
+# ogmios >6.0.0 required (assumed to be in path)
+ogmios --node-socket $CARDANO_NODE_SOCKET_PATH \
+       --node-config $TARGETDIR/cardano-node.json > /dev/null 2>&1
+
