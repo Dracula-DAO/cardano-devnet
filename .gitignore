@@ -3,4 +3,4 @@ target
 node_modules
 package-lock.json
 cardano-devnet.log
-db
+db*

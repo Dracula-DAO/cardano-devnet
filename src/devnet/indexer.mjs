@@ -1,4 +1,5 @@
 import fs from 'fs'
+import path from 'path'
 import { OgmiosConnection, OgmiosStateMachine } from './components/Ogmios.mjs'
 
 const DB_ROOT=process.env.DEVNET_ROOT + "/db"
@@ -8,6 +9,10 @@ const OGMIOS_PORT = 1337
 const ADDR_FAUCET = "addr_test1vztc80na8320zymhjekl40yjsnxkcvhu58x59mc2fuwvgkc332vxv"
 const GENESIS_FAUCET_HASH = "8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284"
 const GENESIS_FAUCET_LOVELACE = 900000000000
+
+function relative_link(target, frompath) {
+  fs.symlinkSync(path.relative(path.dirname(frompath), target), frompath)
+}
 
 class DBTransformer {
 
@@ -23,14 +28,15 @@ class DBTransformer {
     }
   }
 
-  transformTransaction(ogmiosTransaction) {
-    console.log(JSON.stringify(ogmiosTransaction, null, 2))
+  transformTransaction(ogmiosBlock, ogmiosTransaction) {
+    //console.log(JSON.stringify(ogmiosTransaction, null, 2))
     return {
       id: ogmiosTransaction.id,
       spends: ogmiosTransaction.spends,
       fee: ogmiosTransaction.fee,
       validityInterval: ogmiosTransaction.validityInterval,
       signatories: ogmiosTransaction.signatories,
+      producedHeight: ogmiosBlock.height,
       inputs: ogmiosTransaction.inputs.map(i => {
         return i.transaction.id + "#" + i.index
       }),
@@ -64,6 +70,7 @@ class DBWriter {
     fs.mkdirSync(genesis_tx_path + "/outputs/0", { recursive: true })
     fs.writeFileSync(genesis_tx_path + "/tx", JSON.stringify({
       id: GENESIS_FAUCET_HASH,
+      producedHeight: 0,
       outputs: [
         ADDR_FAUCET
       ]
@@ -78,7 +85,13 @@ class DBWriter {
     }, null, 2))
     const genesis_address_path = this.db + "/addresses/" + ADDR_FAUCET
     fs.mkdirSync(genesis_address_path)
-    fs.symlinkSync(genesis_tx_path + "/outputs/0", genesis_address_path + "/" + GENESIS_FAUCET_HASH + "#0")
+    // create initial ledger
+    fs.writeFileSync(genesis_address_path + "/ledger", JSON.stringify({
+      ada: {
+        lovelace: GENESIS_FAUCET_LOVELACE
+      }
+    }, null, 2))
+    relative_link(genesis_tx_path + "/outputs/0", genesis_address_path + "/" + GENESIS_FAUCET_HASH + "#0")
   }
 
   writeBlock(block) {
@@ -90,31 +103,33 @@ class DBWriter {
       fs.mkdirSync(this.db + "/blocks/" + dbBlock.id + "/transactions")
     }
     fs.writeFileSync(this.db + "/blocks/" + dbBlock.id + "/block", formattedBlock)
-    fs.symlinkSync(this.db + "/blocks/" + dbBlock.id, this.db + "/chain/" + dbBlock.height)
+    relative_link(this.db + "/blocks/" + dbBlock.id, this.db + "/chain/" + dbBlock.height)
     block.transactions.forEach((tx, index) => {
       this.writeTransaction(block, tx)
-      fs.symlinkSync(this.db + "/transactions/" + tx.id, this.db + "/blocks/" + block.id + "/transactions/" + index)
+      relative_link(this.db + "/transactions/" + tx.id, this.db + "/blocks/" + block.id + "/transactions/" + index)
     })
     // Write over file, do not remove, to allow file watching
     fs.writeFileSync(this.db + "/latest", formattedBlock)
   }
 
   writeTransaction(block, tx) {
-    const dbTx = this.transformer.transformTransaction(tx)
+    const dbTx = this.transformer.transformTransaction(block, tx)
     const formattedTransaction = JSON.stringify(dbTx, null, 2)
     fs.mkdirSync(this.db + "/transactions/" + tx.id)
     fs.mkdirSync(this.db + "/transactions/" + tx.id + "/inputs")
     fs.mkdirSync(this.db + "/transactions/" + tx.id + "/outputs")
     fs.writeFileSync(this.db + "/transactions/" + tx.id + "/tx", formattedTransaction)
-    fs.symlinkSync(this.db + "/blocks/" + block.id + "/block", this.db + "/transactions/" + tx.id + "/block")
+    relative_link(this.db + "/blocks/" + block.id + "/block", this.db + "/transactions/" + tx.id + "/block")
     tx.inputs.forEach((input, index) => {
       fs.mkdirSync(this.db + "/transactions/" + tx.id + "/inputs/" + index)
-      fs.symlinkSync(this.db + "/transactions/" + input.transaction.id + "/outputs/" + input.index + "/output", this.db + "/transactions/" + tx.id + "/inputs/" + index + "/input")
-      fs.symlinkSync(this.db + "/transactions/" + tx.id, this.db + "/transactions/" + input.transaction.id + "/outputs/" + input.index + "/spentBy")
+      relative_link(this.db + "/transactions/" + input.transaction.id + "/outputs/" + input.index + "/output", this.db + "/transactions/" + tx.id + "/inputs/" + index + "/input")
+      relative_link(this.db + "/transactions/" + tx.id, this.db + "/transactions/" + input.transaction.id + "/outputs/" + input.index + "/spentBy")
       const inputUtxoFile = this.db + "/transactions/" + input.transaction.id + "/outputs/" + input.index + "/output"
       const inputUtxo = JSON.parse(fs.readFileSync(inputUtxoFile))
+      this.consume(inputUtxo)
       fs.unlinkSync(this.db + "/addresses/" + inputUtxo.address + "/" + input.transaction.id + "#" + input.index)
       inputUtxo.spentBy = tx.id
+      inputUtxo.spentHeight = block.height
       fs.writeFileSync(inputUtxoFile, JSON.stringify(inputUtxo, null, 2))
     })
     tx.outputs.forEach((output, index) => {
@@ -122,10 +137,41 @@ class DBWriter {
       fs.writeFileSync(this.db + "/transactions/" + tx.id + "/outputs/" + index + "/output", JSON.stringify(output, null, 2))
       try {
         fs.mkdirSync(this.db + "/addresses/" + output.address)
+        fs.writeFileSync(this.db + "/addresses/ledger", "{}")
       } catch (alreadyExists) {}
-      fs.symlinkSync(this.db + "/transactions/" + tx.id + "/outputs/" + index + "/output", 
+      this.produce(output)
+      relative_link(this.db + "/transactions/" + tx.id + "/outputs/" + index + "/output", 
         this.db + "/addresses/" + output.address + "/" + tx.id + "#" + index)
     })
+  }
+
+  produce(utxo) {
+    let balances
+    try {
+      balances = JSON.parse(fs.readFileSync(this.db + "/addresses/" + utxo.address + "/ledger"))
+    } catch (fileNotFound) {
+      balances = {}
+    }
+    Object.keys(utxo.value).forEach(pid => {
+      Object.keys(utxo.value[pid]).forEach(tn => {
+        if (balances[pid] === undefined) balances[pid] = {}
+        if (balances[pid][tn] === undefined) balances[pid][tn] = 0
+        balances[pid][tn] += utxo.value[pid][tn]
+      })
+    })
+    fs.writeFileSync(this.db + "/addresses/" + utxo.address + "/ledger", JSON.stringify(balances, null, 2))
+  }
+  
+  consume(utxo) {
+    const balances = JSON.parse(fs.readFileSync(this.db + "/addresses/" + utxo.address + "/ledger"))
+    Object.keys(utxo.value).forEach(pid => {
+      Object.keys(utxo.value[pid]).forEach(tn => {
+        if (balances[pid] === undefined) balances[pid] = {}
+        if (balances[pid][tn] === undefined) balances[pid][tn] = 0
+        balances[pid][tn] -= utxo.value[pid][tn]
+      })
+    })
+    fs.writeFileSync(this.db + "/addresses/" + utxo.address + "/ledger", JSON.stringify(balances, null, 2))
   }
 
 }
