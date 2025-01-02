@@ -48,12 +48,11 @@ services:
     restart: on-failure
     command: [
       "--host", "0.0.0.0",
-      "--node-socket", "/ipc/node.socket",
-      "--node-config", "/config/cardano-node.json"
+      "--node-socket", "/runtime/ipc/node.socket",
+      "--node-config", "/runtime/chain/cardano-node.json"
     ]
     volumes:
-      - ${DEVNET_ROOT}/runtime/chain:/config
-      - ${DEVNET_ROOT}/runtime/ipc:/ipc
+      - ${DEVNET_ROOT}/runtime:/runtime
     ports:
       - ${OGMIOS_PORT:-1337}:1337
 
