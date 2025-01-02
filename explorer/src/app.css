@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  padding: 20px;
+}
+
+table {
+  background-color: #eee;
+}
+
+table table {
+  background-color: #dcdcdc;
+}
+
+.color-block {
+  background-color: #e0f2fe;
+  border: 0px;
+}
+
+.color-transaction {
+  background-color: #fef9c3;
+  border: 0px;
+}
+
+.color-unspent-utxo {
+  background-color: #dcfce7;
+  border: 0px;
+  font-size: 14px;
+}
+
+.color-spent-utxo {
+  background-color: #fee2e2;
+  border: 0px;
+  font-size: 14px;
+}
+
+.color-address {
+  background-color: #fed7aa;
+  border: 0px;
+}
+
+.color-token {
+  background-color: #c9a5c3;
+  border: 0px;
+}
+
+.token {
+  width: 32px;
+  height: 32px;
+}
