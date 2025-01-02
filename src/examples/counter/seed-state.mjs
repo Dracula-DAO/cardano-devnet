@@ -1,6 +1,6 @@
 import { Data, Lucid, fromText } from 'lucid-cardano'
-import { DevnetProviderFrontend } from '../lucid-frontend.mjs'
-import { loadJambhalaAddress, loadJambhalaPrivKey, loadJambhalaNativeScript } from '../jambhala-utils.mjs'
+import { DevnetProviderFrontend } from '../../lucid-frontend.mjs'
+import { loadJambhalaAddress, loadJambhalaPrivKey, loadJambhalaNativeScript } from '../../jambhala-utils.mjs'
 
 // This schema must match the state type for the validator script
 const CounterSchema = Data.Object({

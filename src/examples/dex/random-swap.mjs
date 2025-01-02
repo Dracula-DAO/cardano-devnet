@@ -1,6 +1,6 @@
 import { Data, Lucid, fromText } from 'lucid-cardano'
-import { DevnetProviderFrontend } from '../lucid-frontend.mjs'
-import { loadJambhalaPrivKey, loadJambhalaNativeScript, loadJambhalaPlutusScript } from '../jambhala-utils.mjs'
+import { DevnetProviderFrontend } from '../../lucid-frontend.mjs'
+import { loadJambhalaPrivKey, loadJambhalaNativeScript, loadJambhalaPlutusScript } from '../../jambhala-utils.mjs'
 
 process.on('uncaughtException', err => {
   console.log('Caught exception: ' + err)
@@ -21,6 +21,11 @@ const BondingCurveSchema = Data.Object({
 })
 
 const main = async () => {
+  if (process.argv.length !== 4) {
+    console.log("Usage: node <script> <wallet_name> <sleep_delay (ms)> <average trade amount>")
+    process.exit()
+  }
+
   const provider = new DevnetProviderFrontend("ws://localhost:1338")
   await provider.init()
   const lucid = await Lucid.new(provider, "Custom")
