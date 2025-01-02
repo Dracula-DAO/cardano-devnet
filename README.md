@@ -4,15 +4,117 @@ As of the 2024 Chang hard fork, **Dracula DAO** is a sponsor of cardano-devnet d
 
 This repository enables anyone to create a completely local cardano development network that runs only on the development machine, with average block times that can be specified as a number of seconds, assignable from the command line.  This is useful if you want to experiment privately and locally, with an unlimited amount of tokens, without requiring network connectivity, and be able to discard the chain state once you're done with it.
 
-It is recommended to use this with [cardano-cli-guru](https://github.com/iburzynski/cardano-cli-guru), a submodule under the [jambhala](https://github.com/iburzynski/jambhala) framework.
+## Installation
 
-The project includes several additional features in addition to a locally running node:
+1. This project uses maintained docker containers to run the various components (cardano-node, ogmios) automatically.  Install [docker](https://docs.docker.com/engine/install/) and ensure it works for the user you want to run the devnet as (avoid running docker as root). Make sure you have the latest version with the "docker compose" command.
 
-* Live monitor - a terminal-based monitor script that shows high-level transaction information for the last confirmed transaction, as well as real-time pending transactions in the mempool.
+2. Clone the repo and allow direnv ([direnv](https://direnv.net/) must be installed on your system).
+
+```
+$ git clone https://github.com/Dracula-DAO/cardano-devnet
+$ cd cardano-devnet
+```
+
+3. Install dependencies
+
+```
+$ git submodule update --init --recursive
+$ direnv allow
+$ npm install
+$ cd explorer; npm install; cd -
+```
+
+The commands in *step 3* are automated in the *install.sh* script in the home directory.
+
+## Quick start
+
+```
+$ start-cardano-devnet -mie 10
+```
+
+* This will start the terminal monitor, filesystem indexer and web explorer with 10-second average block times. The terminal monitor will run in the terminal where you typed the command (make sure the window is wide enough!)
+
+* You can view the web explorer by navigating a browser to [http://localhost:5173](http://localhost:5173).
+
+The startup script is self contained and the usage is as follows:
+
+```
+usage: start-cardano-devnet [-i] [-e] [-m] <block time>
+  -i  run indexer
+  -e  run explorer
+  -m  run terminal monitor
+```
+
+Where ```<block time>``` is the target number of seconds between blocks. block time must be >= 1. This starts cardano-node locally and runs ogmios, which connects to the unix socket provided by cardano-node.  It then starts the optional components (indexer, explorer, monitor) as specified.
+
+When the script exits it will kill all the processes automatically.
+
+## Test run
+
+After starting the devnet as specified in *Quick start*, open a new terminal in the project directory and give the following a test run to get a feel for what it can do:
+
+1. Create some addresses and fund them:
+
+```
+$ fund alice 100
+$ fund bob 100
+```
+
+2. Transfer some funds from alice to bob:
+
+```
+$ utxos alice
+                           TxHash                                 TxIx        Amount
+--------------------------------------------------------------------------------------
+9ad2e029ffc3c7a8e3e61631d517f74d1345028f7ec0d0a351af8a51d166b7e4     15        100000000 lovelace + TxOutDatumNone
+```
+
+Copy the long **TxHash** hex string and the **TxIx** integer and use them in the following command (note the '#' separating the TxHash and TxIx fields):
+
+```
+$ transfer alice bob 10 9ad2e029ffc3c7a8e3e61631d517f74d1345028f7ec0d0a351af8a51d166b7e4#15
+Estimated transaction fee: 170253 Lovelace
+Signed transaction 'transfer' for alice.
+Wrote signed transaction to '/home/mark/test/cardano-devnet/cardano-cli-guru/assets/tx/transfer.signed'.
+Transaction successfully submitted.
+```
+
+3. Inspect the new utxos:
+
+```
+$ utxos alice
+$ utxos bob
+```
+
+These scripts will query the chain  for alice's current utxos and automatically
+generate and sign the transaction. Note that any utxos in the mempool are included by the lucid
+provider as part of alice's utxos, which allows you to chain transactions rapidly even if they have 
+not yet been included in a block. This differs from online chain operation, where txs must be
+confirmed before you can spend the outputs.
+
+### Check out the examples
+
+The examples directory contains a few different examples of smart contracts that you can take a look at and use as a basis for other projects. If you build something useful for learning please consider contributing with a pull request!
+
+### Check out the web explorer
+
+Assuming you started both the indexer with the "-i" option, and the explorer with the "-e" option when running start-cardano-devnet, or alternatively you are running them separately using the ```indexer``` and ```explorer``` scripts in separate sessions, you should be able to connect to ```http://localhost:5173``` with a browser to explore the chain live as it runs.
+
+## Descripsion of project components
+
+This project uses [cardano-cli-guru](https://github.com/iburzynski/cardano-cli-guru), a submodule under the [jambhala](https://github.com/iburzynski/jambhala) framework, automatically for the creation of human readable address aliases (i.e. *alice* instead of *addr_test1vqhuqk8f0whng7zyp76526w50dx3u4f2jw5t86jg4h4gzkqyj9yzv*)
+
+The project has several parts:
+
+### Live blockchain monitor
+
+Terminal-based monitor that shows real-time high-level transaction information for the last confirmed transaction, as well as pending transactions in the node's mempool.
 
 <img src="./docs/images/devnet_monitor.png" width="700px"/>
 
-* Lightweight indexer - a filesystem indexer built to store chain history in human-readable (json) format in a filesystem directory using symlinks where possible to optimize storage. This is perfect for development because you can start the devnet, run some tests, then stop the devnet and debug using the indexed database and built-in explorer.  This also allows you to peruse the database using standard filesystem cli tools.
+### Lightweight indexer
+
+Filesystem-based indexer built to store chain history in human-readable (json) format in a filesystem directory using symlinks where possible to optimize storage. This is perfect for development because you can start the devnet, run some tests, then stop the devnet and debug using the indexed database and built-in explorer.  This also allows you to peruse the database using standard filesystem cli tools and access address information directly from bash scripts.
 
 ```
 $ cat db/transactions/41a818da0864ba9f4552af75c943b564870db652c99ea1e31d90e2745edb9b57/tx
@@ -44,7 +146,9 @@ $ cat db/transactions/41a818da0864ba9f4552af75c943b564870db652c99ea1e31d90e2745e
 }
 ```
 
-* Web-based chain explorer - view blocks, transactions, spent and unspent utxos, address and token data from a web browser. Optionally specify the directory to use for the db - you can save previous chain states by moving the db directory somewhere and use this saved chain snapshot with the explorer anytime in the future.
+### Blockchain explorer webapp
+
+View blocks, transactions, spent and unspent utxos, address and token data from a web browser. Optionally specify the directory to use for the db - you can save previous chain states by moving the db directory somewhere and use this saved chain snapshot with the explorer anytime in the future.
 
 <img src="./docs/images/web_explorer_block.png" width="600px"/>
 <img src="./docs/images/web_explorer_tx.png" width="600px"/>
@@ -52,80 +156,8 @@ $ cat db/transactions/41a818da0864ba9f4552af75c943b564870db652c99ea1e31d90e2745e
 <img src="./docs/images/web_explorer_addr.png" width="600px"/>
 <img src="./docs/images/web_explorer_token.png" width="600px"/>
 
-* Lucid provider - a lucid provider that connects the client-side lucid api to the node backend. This is a direct replacement for the lucid blockfrost provider when using the preprod or mainnet networks. Allows developers to send transactions directly from javascript.
+### Lucid provider 
 
-## Installation
-
-Follow the instructions in [INSTALL.md](INSTALL.md).
-
-## Examples
-
-In the examples directory, there are several examples of passing state through a sequence of transactions that demonstrate how multiple cardano transactions can be chained to pass a script state from one transaction to the next without requiring the previous transaction to be included in a block. The so-called [cardano eutxo bottleneck](https://builtoncardano.com/blog/concurrency-and-cardano-a-problem-a-challenge-or-nothing-to-worry-about) of one transaction per script address per block does not exist, provided there is a way to query the blockchain mempool.
-
-Currenly only nodes that are block producers have access to the full network mempool, which means that stake pool operators could use a method such as the one demonstrated in this repository to offer a mempool query service to users as an additional way to provide value to the network.
-
-## Usage
-
-Follow the installation instructions, then starting the devnet is as easy as running the startup script:
-
-```
-$ start-cardano-devnet -mie 10
-```
-
-This will start the terminal monitor, filesystem indexer and web explorer with 10-second average block times. The terminal monitor will run in the terminal where you typed the command (make sure the window is wide enough!)
-
-You can view the web explorer by navigating a browser to [http://localhost:5173](http://localhost:5173).
-
-The startup script is self contained and the usage is as follows:
-
-```
-usage: start-cardano-devnet [-i] [-e] [-m] <block time>
-  -i  run indexer
-  -e  run explorer
-  -m  run terminal monitor
-```
-
-Where ```<block time>``` is the target number of seconds between blocks. block time must be >= 1. This starts cardano-node locally and runs ogmios, which connects to the unix socket provided by cardano-node.  It then starts the optional components (indexer, explorer, monitor) as specified.
-
-When the script exits it will kill all the processes automatically.
+Lucid provider that connects the client-side lucid api to the node backend. This is a direct replacement for this lucid project's blockfrost provider when using the preprod or mainnet networks. Allows developers to send transactions directly from javascript. It has the advantage of recognizing mempool transactions when used with this project.
 
 
-### Create some addresses (only with cardano-cli-guru set up during installation)
-
-In a third terminal from this directory, run the key-gen command to generate two addresses:
-
-```
-$ key-gen alice
-$ key-gen bob
-```
-
-### Transfer some funds from the faucet to alice (only with cardano-cli-guru set up):
-
-```
-$ utxos faucet
-                           txhash                                 txix        amount
---------------------------------------------------------------------------------------
-8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284     0        900000000000 lovelace + txoutdatumnone
-$ transfer faucet alice 100 8c78893911a35d7c52104c98e8497a14d7295b4d9bf7811fc1d4e9f449884284#0 
-```
-
-You should see the transaction go into the mempool then eventually get included in a block.
-
-### Try out the lucid transfer script to transfer from alice to bob:
-
-```
-$ node transfer.mjs alice bob 1.5
-```
-
-The lucid transfer script will query the monitor process for alice's current utxos and automatically
-generate and sign the transaction. Note that any utxos in the mempool are included by the monitor
-script as part of alice's utxos, which allows you to chain transactions rapidly even if they have 
-not yet been included in a block!
-
-### Check out the examples
-
-The examples directory contains a few different examples of smart contracts that you can take a look at and use as a basis for other projects. If you build something useful for learning please consider contributing with a pull request!
-
-### Check out the web explorer
-
-Assuming you started both the indexer with the "-i" option, and the explorer with the "-e" option when running start-cardano-devnet, or alternatively you are running them separately using the ```indexer``` and ```explorer``` scripts in separate sessions, you should be able to connect to ```http://localhost:5173``` with a browser to explore the chain live as it runs.
