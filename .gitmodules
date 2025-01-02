@@ -1,3 +1,6 @@
 [submodule "explorer/elegant-circles"]
   path = explorer/elegant-circles
   url = https://github.com/dohliam/elegant-circles.git
+[submodule "cardano-cli-guru"]
+	path = cardano-cli-guru
+	url = https://github.com/iburzynski/cardano-cli-guru.git
