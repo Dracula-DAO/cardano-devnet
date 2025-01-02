@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+if [ ! -f $CARDANO_CLI_GURU/assets/addr/$1.addr ]; then
+  key-gen $1
+fi
+
 node $DEVNET_ROOT/src/devnet/fund.mjs $1 $2
 # wait for cardano-node to index mempool internally
 sleep 1
