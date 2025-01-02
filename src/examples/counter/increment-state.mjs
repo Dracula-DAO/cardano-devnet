@@ -1,5 +1,5 @@
 import { Data, Lucid, fromText } from 'lucid-cardano'
-import { DevnetProviderFrontend } from '../../lucid-frontend.mjs'
+import { LucidProviderFrontend } from '../../lucid-frontend.mjs'
 import { loadJambhalaPrivKey, loadJambhalaNativeScript, loadJambhalaPlutusScript } from '../../jambhala-utils.mjs'
 
 // This schema must match the state type for the validator script
@@ -13,7 +13,7 @@ const main = async () => {
     process.exit()
   }
 
-  const provider = new DevnetProviderFrontend("ws://localhost:1338")
+  const provider = new LucidProviderFrontend("ws://localhost:1338")
   await provider.init()
   const lucid = await Lucid.new(provider, "Custom")
 

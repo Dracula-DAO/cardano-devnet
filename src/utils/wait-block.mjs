@@ -1,7 +1,7 @@
-import { DevnetProviderFrontend } from '../lucid-frontend.mjs'
+import { LucidProviderFrontend } from '../lucid-frontend.mjs'
 
 const main = async () => {
-  const provider = new DevnetProviderFrontend("ws://localhost:1338")
+  const provider = new LucidProviderFrontend("ws://localhost:1338")
   await provider.init()
 
   console.log("waiting for next block...")
