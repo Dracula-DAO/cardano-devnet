@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# This script acts as a front end for cardano-cli. If it finds an actual cardano-cli binary
+# outside this directory in the PATH, it will invoke that binary with the supplied arguments.
+# If it doesn't find a cardano-cli binary, it will run cardano-cli in a docker container,
+# mounting the appropriate volumes and setting the proper environment variables.
+
+unset clipath
+for i in $(echo "$PATH" | sed 's/:/ /g'); do 
+  if [[ $i != ${DEVNET_ROOT}* ]]; then
+    if [ -x $i/cardano-cli ]; then
+      clipath=$i
+      break
+    fi
+  fi
+done
+
+newargs=()
+for i in "${@:1}"; do
+  tmp=$i
+  if [[ $i == ${DEVNET_ROOT}* ]]; then
+    tmp=("${i#$DEVNET_ROOT}")
+  fi
+  if [[ $i == ${CARDANO_CLI_GURU}* ]]; then
+    tmp=("${tmp#$CARDANO_CLI_GURU}")
+  fi
+  newargs+=("${tmp}")
+done
+
+if [ -z ${clipath+x} ]; then
+  # cardano-cli not in PATH external to this directory
+  docker compose -f $DEVNET_ROOT/docker-compose.yml run --rm -T cardano-cli "${newargs[@]}"
+else 
+  echo "clipath"
+  $clipath/cardano-cli "${@:1}"
+fi
