@@ -261,7 +261,7 @@ class DBWriter {
     
     // Update pages
     const page = Math.floor(dbTx.index / PAGE_LENGTH_BLOCKS)
-    let pageObj = {}
+    let pageObj = { list: [], ids: {} }
     try {
       pageObj = JSON.parse(fs.readFileSync(this.db + "/pages/transactions/" + page))
     } catch (noSuchFile) {}
