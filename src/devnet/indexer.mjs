@@ -97,6 +97,11 @@ class DBWriter {
     adaLedger[ADDR_FAUCET] = GENESIS_FAUCET_LOVELACE
     fs.writeFileSync(this.db + "/tokens/ada/lovelace/ledger", JSON.stringify(adaLedger, null, 2))
     relative_link(genesis_tx_path + "/outputs/0", genesis_address_path + "/" + GENESIS_FAUCET_HASH + "#0")
+    fs.writeFileSync(this.db + "/tokens/ledger", JSON.stringify({
+      ada: {
+        lovelace: GENESIS_FAUCET_LOVELACE
+      }
+    }, null, 2))
   }
 
   writeBlock(block) {
@@ -154,6 +159,7 @@ class DBWriter {
     try {
       balances = JSON.parse(fs.readFileSync(this.db + "/addresses/" + utxo.address + "/ledger"))
     } catch (fileNotFound) {}
+    const floats = JSON.parse(fs.readFileSync(this.db + "/tokens/ledger"))
     Object.keys(utxo.value).forEach(pid => {
       if (!fs.existsSync(this.db + "/tokens/" + pid)) {
         fs.mkdirSync(this.db + "/tokens/" + pid)
@@ -168,8 +174,12 @@ class DBWriter {
         } catch {}
         if (balances[pid] === undefined) balances[pid] = {}
         if (balances[pid][tn] === undefined) balances[pid][tn] = 0
-        if (tokenLedger[utxo.address] === undefined) tokenLedger[utxo.address] = 0
         balances[pid][tn] += utxo.value[pid][tn]
+        if (floats[pid] === undefined) floats[pid] = {}
+        if (floats[pid][tn] === undefined) floats[pid][tn] = 0
+        floats[pid][tn] += utxo.value[pid][tn]
+        if (floats[pid] === undefined) floats[pid] = {}
+        if (tokenLedger[utxo.address] === undefined) tokenLedger[utxo.address] = 0
         tokenLedger[utxo.address] += utxo.value[pid][tn]
         if (!fs.existsSync(this.db + "/tokens/" + pid + "/" + tn)) {
           fs.mkdirSync(this.db + "/tokens/" + pid + "/" + tn)
@@ -178,21 +188,27 @@ class DBWriter {
       })
     })
     fs.writeFileSync(this.db + "/addresses/" + utxo.address + "/ledger", JSON.stringify(balances, null, 2))
+    fs.writeFileSync(this.db + "/tokens/ledger", JSON.stringify(floats, null, 2))
   }
   
   consume(utxo) {
     const balances = JSON.parse(fs.readFileSync(this.db + "/addresses/" + utxo.address + "/ledger"))
+    const floats = JSON.parse(fs.readFileSync(this.db + "/tokens/ledger"))
     Object.keys(utxo.value).forEach(pid => {
       Object.keys(utxo.value[pid]).forEach(tn => {
         const tokenLedger = JSON.parse(fs.readFileSync(this.db + "/tokens/" + pid + "/" + tn + "/ledger"))
         if (balances[pid] === undefined) balances[pid] = {}
         if (balances[pid][tn] === undefined) balances[pid][tn] = 0
         balances[pid][tn] -= utxo.value[pid][tn]
+        if (floats[pid] === undefined) floats[pid] = {}
+        if (balances[pid][tn] === undefined) floats[pid][tn] = 0
+        floats[pid][tn] -= utxo.value[pid][tn]
         tokenLedger[utxo.address] -= utxo.value[pid][tn]
         fs.writeFileSync(this.db + "/tokens/" + pid + "/" + tn + "/ledger", JSON.stringify(tokenLedger, null, 2))
       })
     })
     fs.writeFileSync(this.db + "/addresses/" + utxo.address + "/ledger", JSON.stringify(balances, null, 2))
+    fs.writeFileSync(this.db + "/tokens/ledger", JSON.stringify(floats, null, 2))
   }
 
 }

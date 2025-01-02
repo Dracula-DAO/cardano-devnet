@@ -1,9 +1,0 @@
-<html>
-  <head></head>
-  <body>
-    <div>Genesis Transaction {{ id }}</div>
-    {% for output in outputs %}
-      <div><a>Output {{ forloop.index0 }}: {{ output }}</a></div>
-    {% endfor %}
-  </body>
-</html>

@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  padding: 20px;
+}
+
+.color-block {
+  background-color: #e0f2fe;
+}
+
+.color-transaction {
+  background-color: #fef9c3;
+}
+
+.color-unspent-utxo {
+  background-color: #dcfce7;
+}
+
+.color-spent-utxo {
+  background-color: #fee2e2;
+}
+
+.color-address {
+  background-color: #fed7aa;
+}
+
+.token {
+  width: 32px;
+  height: 32px;
+}
