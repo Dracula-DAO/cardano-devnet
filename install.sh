@@ -4,6 +4,7 @@ git submodule update --init --recursive
 direnv allow
 for dir in . explorer
 do
-  npm install
+  echo "installing packages in $dir"
+  cd $dir && npm install; cd -
 done
 
