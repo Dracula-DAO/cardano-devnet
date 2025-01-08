@@ -1,4 +1,4 @@
-As of the 2024 Chang hard fork, **Dracula DAO** is a sponsor of cardano-devnet development. To support this project, consider staking at [Vampyre Fund SPO](https://vampyre.fund), a single pool operator on the Cardano network with reliable uptime since 2020.
+As of the 2024 Chang hard fork, [Dracula DAO](https://draculadao.io) is a sponsor of cardano-devnet development. To support this project, consider staking at [Vampyre Fund SPO](https://vampyre.fund), a single pool operator on the Cardano network with reliable uptime since 2020.
 
 # Cardano Devnet
 
