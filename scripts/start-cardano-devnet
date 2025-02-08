@@ -159,7 +159,7 @@ fi
 
 if [ -n "$START_EXPLORER" ]; then
   echo "Starting explorer"
-  (cd explorer && npm run dev > /dev/null 2>&1) &
+  (cd $DEVNET_ROOT/explorer && npm run dev > /dev/null 2>&1) &
   EXPLORER_PID=$!
 fi
 

@@ -4,7 +4,6 @@ import bunyan from 'bunyan'
 import blessed from 'blessed'
 import { WebSocket, WebSocketServer } from 'ws'
 import bech32 from 'bech32-buffer'
-import { C } from 'lucid-cardano'
 import { decode as decodeCbor } from 'cbor-x'
 
 // Output logging
