@@ -4,7 +4,6 @@ import bunyan from 'bunyan'
 import blessed from 'blessed'
 import { WebSocket, WebSocketServer } from 'ws'
 import bech32 from 'bech32-buffer'
-import { C } from 'lucid-cardano'
 import { decode as decodeCbor } from 'cbor-x'
 
 // Output logging
@@ -533,7 +532,7 @@ class OgmiosSynchronousRequestHandler {
       this.pending[id] = resolve
     })
     if (obj.error !== undefined) {
-      throw Error(obj.error.message)
+      throw Error(JSON.stringify(obj.error))
     }
     return obj.result
   }
